@@ -48,8 +48,9 @@ network_menu() {
     echo -e "\033[32m7)\033[0m TCP窗口调优"
     echo -e "\033[32m8)\033[0m 测试访问优先级"
     echo -e "\033[32m9)\033[0m 25端口开放测试"
-	echo -e "\033[32m10)\033[0m 调整ipv4/6优先访问（非直接禁用）"
-    echo -e "\033[32m11)\033[0m 返回主菜单"
+    echo -e "\033[32m10)\033[0m 调整ipv4/6优先访问（非直接禁用）"
+    echo -e "\033[32m11)\033[0m 禁用启用ICMP"
+    echo -e "\033[32m12)\033[0m 返回主菜单"
 }
 
 proxy_menu() {
@@ -276,6 +277,38 @@ adjust_ipv_priority() {
     echo "操作完成。按回车键返回菜单。"
     read -r
 }
+
+manage_icmp() {
+    echo "选择一个选项:"
+    echo -e "\033[32m1)\033[0m 启用ICMP"
+    echo -e "\033[32m2)\033[0m 禁用ICMP"
+    echo -e "\033[32m3)\033[0m 返回上一级菜单"
+    read -p "请输入你的选择: " icmp_choice
+    case $icmp_choice in
+        1)
+            sudo sed -i '/net.ipv4.icmp_echo_ignore_all/d' /etc/sysctl.conf
+            echo "net.ipv4.icmp_echo_ignore_all=0" | sudo tee -a /etc/sysctl.conf
+            sudo sysctl -p
+            echo "ICMP已启用"
+            ;;
+        2)
+            sudo sed -i '/net.ipv4.icmp_echo_ignore_all/d' /etc/sysctl.conf
+            echo "net.ipv4.icmp_echo_ignore_all=1" | sudo tee -a /etc/sysctl.conf
+            sudo sysctl -p
+            echo "ICMP已禁用"
+            ;;
+        3)
+            echo "返回上一级菜单"
+            return
+            ;;
+        *)
+            echo "无效的选择，请重试。"
+            ;;
+    esac
+    echo "操作完成。按回车键返回菜单。"
+    read -r
+}
+
 
 xray_management() {
     clear
@@ -714,8 +747,9 @@ while true; do
                     7) tcp_window_tuning ;;
                     8) test_access_priority ;;
                     9) port_25_test ;;
-					10) adjust_ipv_priority ;;
-                    11) break ;;
+		    10) adjust_ipv_priority ;;
+                    11) manage_icmp ;;
+                    12) break ;;
                     *) echo "无效的选择，请重试。" ;;
                 esac
             done
