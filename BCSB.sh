@@ -68,11 +68,11 @@ proxy_menu() {
 vps_test_menu() {
     echo -e "\033[32mVPS测试选项:\033[0m"
     echo -e "\033[32m1)\033[0m 综合测试脚本"
-    echo -e "\033[0m2)\033[0m 性能测试"
-    echo -e "\033[0m3)\033[0m 流媒体及 IP 质量测试"
-    echo -e "\033[0m4)\033[0m 三网测速脚本"
-    echo -e "\033[0m5)\033[0m 回程测试"
-    echo -e "\033[0m6)\033[0m 返回主菜单"
+    echo -e "\033[32m2)\033[0m 性能测试"
+    echo -e "\033[32m3)\033[0m 流媒体及 IP 质量测试"
+    echo -e "\033[32m4)\033[0m 三网测速脚本"
+    echo -e "\033[32m5)\033[0m 回程测试"
+    echo -e "\033[32m6)\033[0m 返回主菜单"
 }
 
 kernel_optimization() {
@@ -387,10 +387,10 @@ install_hy2_script() {
 comprehensive_test_script() {
     clear
     echo "选择一个综合测试脚本:"
-    echo "1) 融合怪"
-    echo "2) NodeBench"
-    echo "3) yabs"
-    echo "4) 使用 gb5 测试 yabs"
+    echo -e "\033[32m1)\033[0m 融合怪"
+    echo -e "\033[32m2)\033[0m NodeBench"
+    echo -e "\033[32m3)\033[0m yabs"
+    echo -e "\033[32m4)\033[0m 使用 gb5 测试 yabs"
     read -p "请输入你的选择: " test_choice
     case $test_choice in
         1)
@@ -416,7 +416,7 @@ comprehensive_test_script() {
 performance_test_script() {
     clear
     echo "选择一个性能测试脚本:"
-    echo "1) GB5 专测脚本"
+    echo -e "\033[32m1)\033[0m GB5 专测脚本"
     read -p "请输入你的选择: " perf_choice
     case $perf_choice in
         1)
@@ -433,11 +433,11 @@ performance_test_script() {
 media_ip_quality_test_script() {
     clear
     echo "选择一个流媒体及 IP 质量测试脚本:"
-    echo "1) media测试脚本"
-    echo "2) check原生检测脚本"
-    echo "3) Check准确度最高"
-    echo "4) IP 质量体检脚本"
-    echo "5) ChatGPT 解锁检测"
+    echo -e "\033[32m1)\033[0m media测试脚本"
+    echo -e "\033[32m2)\033[0m check原生检测脚本"
+    echo -e "\033[32m3)\033[0m Check准确度最高"
+    echo -e "\033[32m4)\033[0m IP 质量体检脚本"
+    echo -e "\033[32m5)\033[0m ChatGPT 解锁检测"
     read -p "请输入你的选择: " media_choice
     case $media_choice in
         1)
@@ -498,10 +498,10 @@ media_ip_quality_test_script() {
 network_speed_test_script() {
     clear
     echo "选择一个三网测速脚本:"
-    echo "1) Speedtest"
-    echo "2) Taier"
-    echo "3) hyperspeed"
-    echo "4) 全球测速"
+    echo -e "\033[32m1)\033[0m Speedtest"
+    echo -e "\033[32m2)\033[0m Taier"
+    echo -e "\033[32m3)\033[0m hyperspeed"
+    echo -e "\033[32m4)\033[0m 全球测速"
     read -p "请输入你的选择: " speedtest_choice
     case $speedtest_choice in
         1)
@@ -527,8 +527,8 @@ network_speed_test_script() {
 backtrace_test_script() {
     clear
     echo "选择一个回程测试脚本:"
-    echo "1) 直接显示回程（小白用这个）"
-    echo "2) 回程详细测试（推荐）"
+    echo -e "\033[32m1)\033[0m 直接显示回程（小白用这个）"
+    echo -e "\033[32m2)\033[0m 回程详细测试（推荐）"
     read -p "请输入你的选择: " backtrace_choice
     case $backtrace_choice in
         1)
@@ -548,9 +548,9 @@ backtrace_test_script() {
 function_script() {
     clear
     echo "选择一个选项:"
-    echo "1) Fail2ban"
-    echo "2) 添加SWAP"
-    echo "3) 更改SSH端口"
+    echo -e "\033[32m1)\033[0m Fail2ban"
+    echo -e "\033[32m2)\033[0m 添加SWAP"
+    echo -e "\033[32m3)\033[0m 更改SSH端口"
     read -p "请输入你的选择: " function_choice
     case $function_choice in
         1)
