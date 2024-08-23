@@ -26,28 +26,53 @@ install_if_missing() {
 
 install_if_missing curl
 install_if_missing wget
+
 show_menu() {
     echo -e "\033[32m请选择一个操作:\033[0m"
-    echo -e "\033[32m1)\033[0m 核心优化"
+    echo -e "\033[32m1)\033[0m 网络"
+    echo -e "\033[32m2)\033[0m 代理"
+    echo -e "\033[32m3)\033[0m VPS测试"
+    echo -e "\033[32m4)\033[0m 其他功能"
+    echo -e "\033[32m5)\033[0m 安装常用环境及软件"
+    echo -e "\033[32m6)\033[0m 退出"
+}
+
+network_menu() {
+    echo -e "\033[32m网络选项:\033[0m"
+    echo -e "\033[32m1)\033[0m 核心参数优化"
     echo -e "\033[32m2)\033[0m 安装大小包测试 nexttrace"
-    echo -e "\033[32m3)\033[0m xray管理"
-    echo -e "\033[32m4)\033[0m 安装mieru"
-    echo -e "\033[32m5)\033[0m 安装/启动 btop"
-    echo -e "\033[32m6)\033[0m 科技lion 综合功能脚本"
-    echo -e "\033[32m7)\033[0m SKY-BOX 综合功能脚本"
-    echo -e "\033[32m8)\033[0m v2bx一键安装脚本"
-    echo -e "\033[32m9)\033[0m 安装 DDNS 脚本"
-    echo -e "\033[32m10)\033[0m 安装 Xboard"
-    echo -e "\033[32m11)\033[0m 小鸡剑皇脚本"
-    echo -e "\033[32m12)\033[0m DD 重装脚本"
-    echo -e "\033[32m13)\033[0m 综合测试脚本"
-    echo -e "\033[32m14)\033[0m 性能测试"
-    echo -e "\033[32m15)\033[0m 流媒体及 IP 质量测试"
-    echo -e "\033[32m16)\033[0m 三网测速脚本"
-    echo -e "\033[32m17)\033[0m 回程测试"
-    echo -e "\033[32m18)\033[0m 其他功能"
-    echo -e "\033[32m19)\033[0m 安装常用环境及软件"
-    echo -e "\033[32m20)\033[0m 退出"
+    echo -e "\033[32m3)\033[0m 安装 DDNS 脚本"
+    echo -e "\033[32m4)\033[0m 小鸡剑皇脚本"
+    echo -e "\033[32m5)\033[0m 一键开启BBR"
+    echo -e "\033[32m6)\033[0m 多功能BBR安装脚本"
+    echo -e "\033[32m7)\033[0m TCP窗口调优"
+    echo -e "\033[32m8)\033[0m 测试访问优先级"
+    echo -e "\033[32m9)\033[0m 25端口开放测试"
+	echo -e "\033[32m10)\033[0m 调整ipv4/6优先访问（非直接禁用）"
+    echo -e "\033[32m11)\033[0m 返回主菜单"
+}
+
+proxy_menu() {
+    echo -e "\033[32m代理选项:\033[0m"
+    echo -e "\033[32m1)\033[0m xray管理"
+    echo -e "\033[32m2)\033[0m 安装mieru（改自MisakaNo）"
+    echo -e "\033[32m3)\033[0m v2bx一键安装脚本"
+	echo -e "\033[32m4)\033[0m v2ray-agent八合一一键脚本"
+    echo -e "\033[32m5)\033[0m 安装 Xboard"
+	echo -e "\033[32m6)\033[0m 安装极光转发面板"
+	echo -e "\033[32m7)\033[0m 安装咸蛋转发面板"
+	echo -e "\033[32m8)\033[0m hy2一键脚本"
+    echo -e "\033[32m9)\033[0m 返回主菜单"
+}
+
+vps_test_menu() {
+    echo -e "\033[32mVPS测试选项:\033[0m"
+    echo -e "\033[32m1)\033[0m 综合测试脚本"
+    echo -e "\033[0m2)\033[0m 性能测试"
+    echo -e "\033[0m3)\033[0m 流媒体及 IP 质量测试"
+    echo -e "\033[0m4)\033[0m 三网测速脚本"
+    echo -e "\033[0m5)\033[0m 回程测试"
+    echo -e "\033[0m6)\033[0m 返回主菜单"
 }
 
 kernel_optimization() {
@@ -112,256 +137,143 @@ install_and_test_nexttrace() {
     done
 }
 
-install_vless_tls_splithttp_h3() {
+install_ddns_script() {
     clear
-    apt update
-    apt install -y curl nano socat
+    echo "下载并运行 DDNS 脚本..."
+    curl -sS -o /root/cf-v4-ddns.sh https://raw.githubusercontent.com/aipeach/cloudflare-api-v4-ddns/master/cf-v4-ddns.sh
+    chmod +x /root/cf-v4-ddns.sh
+    echo "脚本下载完成并已赋予执行权限。"
 
-    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
-    
-    echo "注释掉 /etc/systemd/system/xray.service 中的 User=nobody 行..."
-    sudo sed -i 's/^User=nobody/#&/' /etc/systemd/system/xray.service
+    read -p "请输入你的CF的Global密钥: " CFKEY
+    while [[ -z "$CFKEY" ]]; do
+        echo "Global密钥不能为空，请重试。"
+        read -p "请输入你的CF的Global密钥: " CFKEY
+    done
 
-    echo "重新加载 systemd 守护进程..."
-    sudo systemctl daemon-reload
+    read -p "请输入你的CF账号: " CFUSER
+    while [[ -z "$CFUSER" ]]; do
+        echo "CF账号不能为空，请重试。"
+        read -p "请输入你的CF账号: " CFUSER
+    done
 
-    curl https://get.acme.sh | sh
-    source ~/.bashrc
+    read -p "请输入需要用来 DDNS 的一级域名 (例如: baidu.com): " CFZONE_NAME
+    while [[ -z "$CFZONE_NAME" ]]; do
+        echo "一级域名不能为空，请重试。"
+        read -p "请输入需要用来 DDNS 的一级域名 (例如: baidu.com): " CFZONE_NAME
+    done
 
-    read -p "请输入您的电子邮箱: " email
-    ~/.acme.sh/acme.sh --register-account -m $email
+    read -p "请输入 DDNS 的二级域名前缀 (例如: 123): " CFRECORD_NAME
+    while [[ -z "$CFRECORD_NAME" ]]; do
+        echo "二级域名前缀不能为空，请重试。"
+        read -p "请输入 DDNS 的二级域名前缀 (例如: 123): " CFRECORD_NAME
+    done
 
-    read -p "请输入您的域名: " domain
-    ~/.acme.sh/acme.sh --issue --standalone -d $domain
+    sed -i "s/^CFKEY=.*/CFKEY=${CFKEY}/" /root/cf-v4-ddns.sh
+    sed -i "s/^CFUSER=.*/CFUSER=${CFUSER}/" /root/cf-v4-ddns.sh
+    sed -i "s/^CFZONE_NAME=.*/CFZONE_NAME=${CFZONE_NAME}/" /root/cf-v4-ddns.sh
+    sed -i "s/^CFRECORD_NAME=.*/CFRECORD_NAME=${CFRECORD_NAME}/" /root/cf-v4-ddns.sh
 
-    mkdir ~/xray_cert
-    ~/.acme.sh/acme.sh --install-cert -d $domain --ecc \
-        --fullchain-file ~/xray_cert/xray.crt \
-        --key-file ~/xray_cert/xray.key
-    chmod +r ~/xray_cert/xray.key
+    echo "配置文件已更新。"
 
-    sed -i 's/User=nobody/# User=nobody/' /etc/systemd/system/xray.service
+    /root/cf-v4-ddns.sh
 
-    cd /usr/local/bin/
-    uuid=$(./xray uuid)
+    echo "设置定时任务..."
+    read -p "是否需要日志？(y/n): " log_choice
 
-    read -p "请输入path路径（留空以生成随机路径）: " path
-    if [ -z "$path" ];then
-        path=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 16 | head -n 1)
-    fi
-
-    read -p "是否启用CDN？ (y/n): " use_cdn
-    if [[ "$use_cdn" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        alpn='["h2", "http/1.1"]'
-        alpn_param='h3'
+    if [ "$log_choice" = "y" ] || [ "$log_choice" = "Y" ]; then
+        mkdir -p /var/log
+        (crontab -l 2>/dev/null; echo "*/2 * * * * /root/cf-v4-ddns.sh >> /var/log/cf-ddns.log 2>&1") | crontab -
+        echo "定时任务已设置，并将日志保存到 /var/log/cf-ddns.log。"
     else
-        alpn='["h3"]'
-        alpn_param='h2,http/1.1'
+        (crontab -l 2>/dev/null; echo "*/2 * * * * /root/cf-v4-ddns.sh >/dev/null 2>&1") | crontab -
+        echo "定时任务已设置。"
     fi
 
-    read -p "请输入端口（如果要套CDN，最好选择443端口）: " port
-
-    cat <<EOF > /usr/local/etc/xray/config.json
-{
-    "inbounds": [
-        {
-            "sniffing": {
-                "enabled": true,
-                "destOverride": [
-                    "http",
-                    "tls",
-                    "quic"
-                ]
-            },
-            "port": $port,
-            "listen": "0.0.0.0",
-            "protocol": "vless",
-            "settings": {
-                "clients": [
-                    {
-                        "id": "$uuid"
-                    }
-                ],
-                "decryption": "none"
-            },
-            "streamSettings": {
-                "network": "splithttp",
-                "security": "tls",
-                "splithttpSettings": {
-                    "path": "/$path",
-                    "host": "$domain"
-                },
-                "tlsSettings": {
-                    "rejectUnknownSni": true,
-                    "minVersion": "1.3",
-                    "alpn": $alpn,
-                    "certificates": [
-                        {
-                            "ocspStapling": 3600,
-                            "certificateFile": "/root/xray_cert/xray.crt",
-                            "keyFile": "/root/xray_cert/xray.key"
-                        }
-                    ]
-                }
-            }
-        }
-    ],
-    "outbounds": [
-        {
-            "tag": "direct",
-            "protocol": "freedom"
-        }
-    ]
-}
-EOF
-
-    # 启动Xray
-    systemctl daemon-reload
-    systemctl start xray
-    systemctl enable xray
-
-    # 生成分享链接
-    share_link="vless://${uuid}@${domain}:${port}?encryption=none&security=tls&sni=${domain}&alpn=${alpn_param}&fp=chrome&type=splithttp&host=${domain}&path=/${path}#Xray"
-
-    echo "分享链接: $share_link"
-    echo "安装 VLESS-TLS-SplitHTTP-H3 完成。按回车键返回菜单。"
+    echo "运行完成。按回车键返回菜单。"
     read -r
 }
 
-install_xtls_rprx_vision_reality() {
-    clear
-    echo "安装 xray..."
-    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
 
-    echo "注释掉 /etc/systemd/system/xray.service 中的 User=nobody 行..."
-    sudo sed -i 's/^User=nobody/#&/' /etc/systemd/system/xray.service
+chicken_king_script() {
+    echo "剑皇在路上..."
+    wget https://github.com/maintell/webBenchmark/releases/download/0.5/webBenchmark_linux_x64
+    chmod +x webBenchmark_linux_x64
 
-    echo "重新加载 systemd 守护进程..."
-    sudo systemctl daemon-reload
+    echo "请输入线程数："
+    read threads
+    echo "请输入图片/文件路径："
+    read file_path
 
-    echo "创建 /var/log/xray 目录并设置权限..."
-    sudo mkdir -p /var/log/xray
-    sudo chown -R $(whoami):$(whoami) /var/log/xray
-
-    echo "生成 UUID..."
-    cd /usr/local/bin/
-    uuid=$(./xray uuid)
-
-    echo "生成 x25519 密钥对..."
-    keys=$(./xray x25519)
-    privateKey=$(echo "$keys" | grep 'Private' | awk '{print $3}')
-    publicKey=$(echo "$keys" | grep 'Public' | awk '{print $3}')
-
-    read -rp "请输入端口号（默认10086）: " port
-    port=${port:-10086}
-
-    read -rp "请输入域名（默认as.idolmaster-official.jp）: " domain
-    domain=${domain:-as.idolmaster-official.jp}
-
-    echo "生成 shortIds..."
-    shortIds=$(cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 16 | head -n 1)
-
-    echo "编辑 xray 配置文件..."
-    sudo bash -c "cat << EOF > /usr/local/etc/xray/config.json
-{
-  \"log\": {
-    \"loglevel\": \"warning\",
-    \"access\": \"/var/log/xray/access.log\",
-    \"error\": \"/var/log/xray/error.log\"
-  },
-  \"dns\": {
-    \"servers\": [
-      \"https+local://1.1.1.1/dns-query\",
-      \"localhost\"
-    ]
-  },
-  \"routing\": {
-    \"domainStrategy\": \"IPIfNonMatch\",
-    \"rules\": [
-      {
-        \"type\": \"field\",
-        \"ip\": [
-          \"geoip:private\" 
-        ],
-        \"outboundTag\": \"block\"
-      },
-      {
-        \"type\": \"field\",
-        \"ip\": [\"geoip:cn\"],
-        \"outboundTag\": \"block\"
-      },
-      {
-        \"type\": \"field\",
-        \"domain\": [
-          \"geosite:category-ads-all\" 
-        ],
-        \"outboundTag\": \"block\" 
-      }
-    ]
-  },
-  \"inbounds\": [
-    {
-      \"listen\": \"0.0.0.0\",
-      \"port\": $port,
-      \"protocol\": \"vless\",
-      \"settings\": {
-        \"clients\": [
-          {
-            \"id\": \"$uuid\",
-            \"flow\": \"xtls-rprx-vision\",
-            \"level\": 0,
-            \"email\": \"xray@gmail.com\"
-          }
-        ],
-        \"decryption\": \"none\"
-      },
-      \"streamSettings\": {
-        \"network\": \"tcp\",
-        \"security\": \"reality\",
-        \"realitySettings\": {
-          \"show\": false,
-          \"dest\": \"$domain:443\",
-          \"xver\": 0,
-          \"serverNames\": [\"$domain\"],
-          \"privateKey\": \"$privateKey\",
-          \"publicKey\": \"$publicKey\",
-          \"maxTimeDiff\": 7000,
-          \"shortIds\": [\"\", \"$shortIds\"]
-        }
-      }
-    }
-  ],
-  \"outbounds\": [
-    {
-      \"tag\": \"direct\",
-      \"protocol\": \"freedom\"
-    },
-    {
-      \"tag\": \"block\",
-      \"protocol\": \"blackhole\"
-    }
-  ]
+    ./webBenchmark_linux_x64 -c "$threads" -s "$file_path"
+    echo "开始剑皇"
+    echo "按回车键返回主菜单..."
+    read -r
 }
-EOF"
 
-    echo "重新加载 xray 服务配置..."
-    sudo systemctl restart xray
+enable_bbr() {
+    echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
+    echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
+    sysctl -p
+    sysctl net.ipv4.tcp_available_congestion_control
+    lsmod | grep bbr
+    echo "BBR 已开启。按回车键返回菜单。"
+    read -r
+}
 
-    echo "检查 xray 服务状态..."
-    sudo systemctl status xray
+install_multifunction_bbr() {
+    wget -N --no-check-certificate "https://gist.github.com/zeruns/a0ec603f20d1b86de6a774a8ba27588f/raw/4f9957ae23f5efb2bb7c57a198ae2cffebfb1c56/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
+    echo "多功能BBR安装脚本运行完成。按回车键返回菜单。"
+    read -r
+}
 
-    echo "设置 xray 开机自启..."
-    sudo systemctl enable xray
+tcp_window_tuning() {
+    wget http://sh.nekoneko.cloud/tools.sh -O tools.sh && bash tools.sh
+    echo "TCP窗口调优完成。按回车键返回菜单。"
+    read -r
+}
 
-    ip=$(curl -4 -s ifconfig.me)
-    shareLink="vless://$uuid@$ip:$port?security=reality&sni=$domain&fp=chrome&pbk=$publicKey&sid=$shortIds&type=tcp&flow=xtls-rprx-vision&encryption=none#$ip"
+test_access_priority() {
+    curl ip.sb
+    echo "访问优先级测试完成。按回车键返回菜单。"
+    read -r
+}
 
-    echo "安装 xtls-rprx-vision-reality 完成。以下是配置信息："
-    echo "UUID: $uuid"
-    echo "PrivateKey: $privateKey"
-    echo "PublicKey: $publicKey"
-    echo "分享链接: $shareLink"
-    echo "按回车键返回菜单。"
+port_25_test() {
+    telnet smtp.aol.com 25
+    echo "25端口开放测试完成。按回车键返回菜单。"
+    read -r
+}
+
+adjust_ipv_priority() {
+    clear
+    echo "选择一个选项来调整IPv4/IPv6的优先访问:"
+    echo "1) 优先使用IPv4"
+    echo "2) 优先使用IPv6"
+    read -p "请输入你的选择: " ipv_choice
+    case $ipv_choice in
+        1)
+            echo "优先使用IPv4..."
+            if grep -q "precedence ::ffff:0:0/96  100" /etc/gai.conf; then
+                echo "已经设置为优先使用IPv4。"
+            else
+                echo "precedence ::ffff:0:0/96  100" | sudo tee -a /etc/gai.conf
+                echo "已设置为优先使用IPv4。"
+            fi
+            ;;
+        2)
+            echo "优先使用IPv6..."
+            if grep -q "precedence ::ffff:0:0/96  100" /etc/gai.conf; then
+                sudo sed -i '/^precedence ::ffff:0:0\/96  100/d' /etc/gai.conf
+                echo "已设置为优先使用IPv6。"
+            else
+                echo "已经设置为优先使用IPv6。"
+            fi
+            ;;
+        *)
+            echo "无效的选择，请重试。"
+            ;;
+    esac
+    echo "操作完成。按回车键返回菜单。"
     read -r
 }
 
@@ -390,36 +302,10 @@ xray_management() {
     read -r
 }
 
-install_or_start_btop() {
+install_mieru_script() {
     clear
-    if ! command -v btop &> /dev/null; then
-        echo "btop 未安装，正在安装..."
-        sudo apt update
-        sudo apt install -y build-essential cmake libncurses5-dev libncursesw5-dev git
-        git clone https://github.com/aristocratos/btop.git
-        cd btop
-        make
-        sudo make install
-    else
-        echo "btop 已安装，跳过安装步骤。"
-    fi
-
-    echo "启动 btop..."
-    btop
-}
-
-install_techlion_script() {
-    clear
-    echo "运行科技lion 综合功能脚本..."
-    curl -sS -O https://raw.githubusercontent.com/kejilion/sh/main/kejilion.sh && chmod +x kejilion.sh && ./kejilion.sh
-    echo "运行完成。按回车键返回菜单。"
-    read -r
-}
-
-install_skybox_script() {
-    clear
-    echo "运行SKY-BOX 综合功能脚本..."
-    wget -O box.sh https://raw.githubusercontent.com/BlueSkyXN/SKY-BOX/main/box.sh && chmod +x box.sh && clear && ./box.sh
+    echo "运行Mieru 综合功能脚本..."
+    wget -N --no-check-certificate https://raw.githubusercontent.com/jianghulun123/mieru-script/main/mieru.sh && bash mieru.sh
     echo "运行完成。按回车键返回菜单。"
     read -r
 }
@@ -428,6 +314,30 @@ install_v2bx_script() {
     clear
     echo "运行v2bx一键安装脚本..."
     wget -N https://raw.githubusercontent.com/wyx2685/V2bX-script/master/install.sh && bash install.sh
+    echo "安装完成。按回车键返回菜单。"
+    read -r
+}
+
+install_v2ray-agent_script() {
+    clear
+    echo "运行v2ray-agent八合一键脚本..."
+    wget -P /root -N --no-check-certificate "https://raw.githubusercontent.com/mack-a/v2ray-agent/master/install.sh" && chmod 700 /root/install.sh && /root/install.sh
+    echo "安装完成。按回车键返回菜单。"
+    read -r
+}
+
+install_Aurora_script() {
+    clear
+    echo "安装极光转发面板..."
+    bash <(curl -fsSL https://raw.githubusercontent.com/Aurora-Admin-Panel/deploy/main/install.sh)
+    echo "安装完成。按回车键返回菜单。"
+    read -r
+}
+
+install_xiandan_script() {
+    clear
+    echo "安装咸蛋转发面板..."
+    bash <(wget --no-check-certificate -qO- 'https://sh.xdmb.xyz/xiandan/xd.sh')
     echo "安装完成。按回车键返回菜单。"
     read -r
 }
@@ -466,179 +376,12 @@ install_xboard() {
     read -p "安装完成，按回车键返回主菜单..."
 }
 
-chicken_king_script() {
-    echo "剑皇在路上"
-    wget https://github.com/maintell/webBenchmark/releases/download/0.5/webBenchmark_linux_x64
-    chmod +x webBenchmark_linux_x64
-
-    echo "请输入线程数："
-    read threads
-    echo "请输入图片/文件路径："
-    read file_path
-
-    ./webBenchmark_linux_x64 -c "$threads" -s "$file_path"
-    echo "开始剑皇"
-    echo "按回车键返回主菜单..."
-    read -r
-}
-
-install_ddns_script() {
+install_hy2_script() {
     clear
-    echo "下载并运行 DDNS 脚本..."
-    curl -sS -o /root/cf-v4-ddns.sh https://raw.githubusercontent.com/aipeach/cloudflare-api-v4-ddns/master/cf-v4-ddns.sh
-    chmod +x /root/cf-v4-ddns.sh
-    echo "脚本下载完成并已赋予执行权限。"
-
-    read -p "请输入你的CF的Global密钥: " CFKEY
-    read -p "请输入你的CF账号: " CFUSER
-    read -p "请输入需要用来 DDNS 的一级域名 (例如: baidu.com): " CFZONE_NAME
-    read -p "请输入 DDNS 的二级域名前缀 (例如: 123): " CFRECORD_NAME
-
-    sed -i "s/^CFKEY=.*/CFKEY=${CFKEY}/" /root/cf-v4-ddns.sh
-    sed -i "s/^CFUSER=.*/CFUSER=${CFUSER}/" /root/cf-v4-ddns.sh
-    sed -i "s/^CFZONE_NAME=.*/CFZONE_NAME=${CFZONE_NAME}/" /root/cf-v4-ddns.sh
-    sed -i "s/^CFRECORD_NAME=.*/CFRECORD_NAME=${CFRECORD_NAME}/" /root/cf-v4-ddns.sh
-
-    echo "配置文件已更新。"
-
-    /root/cf-v4-ddns.sh
-
-    echo "设置定时任务..."
-    (crontab -l 2>/dev/null; echo "*/2 * * * * /root/cf-v4-ddns.sh >/dev/null 2>&1") | crontab -
-
-    echo "定时任务已设置。"
-    echo "如果需要日志，请手动编辑crontab，替换为以下内容："
-    echo "*/2 * * * * /root/cf-v4-ddns.sh >> /var/log/cf-ddns.log 2>&1"
-
-    echo "运行完成。按回车键返回菜单。"
+    echo "执行hy2脚本..."
+    curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/hy2.sh && chmod +x hy2.sh && ./hy2.sh
+    echo "安装完成。按回车键返回菜单。"
     read -r
-}
-
-dd_reinstall_script() {
-    while true; do
-        clear
-        echo "安装依赖和更新系统..."
-
-        # Debian/Ubuntu:
-        if [ -f /etc/debian_version ]; then
-            apt-get update
-            apt-get install -y xz-utils openssl gawk file
-        # RedHat/CentOS:
-        elif [ -f /etc/redhat-release ]; then
-            yum update
-            yum install -y xz openssl gawk file
-        else
-            echo "未知的操作系统。"
-            exit 1
-        fi
-
-        clear
-        echo "选择一个 DD 重装脚本:"
-        echo "1) DD Windows Server 2008 R2 64位 精简版"
-        echo "2) DD Windows Server 2012 R2 64位 精简版"
-        echo "3) DD Windows Server 2016 64位 精简版"
-        echo "4) DD Windows Server 2019 64位 精简版"
-        echo "5) DD Windows Server 2022 64位 精简版"
-        echo "6) DD Windows7 32位 精简版"
-        echo "7) DD Windows7 sp1 64位 企业精简版"
-        echo "8) DD Windows8.1 64位 专业精简版"
-        echo "9) DD Windows10 2016LTSB 64位 企业深度精简版"
-        echo "10) DD Windows10 2019LTSC 64位 企业深度精简版"
-        echo "11) DD Windows10 2021LTSC 64位 企业深度精简版"
-        echo "12) 使用自定义链接"
-        echo "13) 萌咖大佬脚本"
-        echo "14) 直接回车返回菜单"
-        read -p "请输入你的选择: " dd_choice
-
-        case $dd_choice in
-            1)
-                dd_url='https://oss.suntl.com/Windows/Win_Server2008R2_sp1_64_Administrator_nat.ee.gz'
-                account='Administrator'
-                password='nat.ee'
-                ;;
-            2)
-                dd_url='https://oss.suntl.com/Windows/Win_Server2012R2_64_Administrator_nat.ee.gz'
-                account='Administrator'
-                password='nat.ee'
-                ;;
-            3)
-                dd_url='https://oss.suntl.com/Windows/Win_Server2016_64_Administrator_nat.ee.gz'
-                account='Administrator'
-                password='nat.ee'
-                ;;
-            4)
-                dd_url='https://oss.suntl.com/Windows/Win_Server2019_64_Administrator_WinSrv2019dc-Chinese.gz'
-                account='Administrator'
-                password='WinSrv2019dc-Chinese'
-                ;;
-            5)
-                dd_url='https://oss.suntl.com/Windows/Win_Server2022_64_Administrator_nat.ee.gz'
-                account='Administrator'
-                password='nat.ee'
-                ;;
-            6)
-                dd_url='https://oss.suntl.com/Windows/Win7_86_Administrator_nat.ee.gz'
-                account='Administrator'
-                password='nat.ee'
-                ;;
-            7)
-                dd_url='https://oss.suntl.com/Windows/Win7_sp1_64_Administrator_nat.ee.gz'
-                account='Administrator'
-                password='nat.ee'
-                ;;
-            8)
-                dd_url='https://oss.suntl.com/Windows/Win8.1_64_Administrator_nat.ee.gz'
-                account='Administrator'
-                password='nat.ee'
-                ;;
-            9)
-                dd_url='https://oss.suntl.com/Windows/Win10_2016LTSB_64_Administrator_nat.ee.gz'
-                account='Administrator'
-                password='nat.ee'
-                ;;
-            10)
-                dd_url='https://oss.suntl.com/Windows/Win10_2019LTSC_64_Administrator_nat.ee.gz'
-                account='Administrator'
-                password='nat.ee'
-                ;;
-            11)
-                dd_url='https://oss.suntl.com/Windows/Win10_2021LTSC_64_Administrator_nat.ee.gz'
-                account='Administrator'
-                password='nat.ee'
-                ;;
-            12)
-                read -p "请输入自定义链接: " dd_url
-                read -p "请输入账户名称: " account
-                read -p "请输入密码: " password
-                ;;
-            13)
-                read -p "请输入密码: " password
-                read -p "请输入端口: " port
-                echo "账户：root"
-                echo "密码：$password"
-                bash <(wget --no-check-certificate -qO- 'https://raw.githubusercontent.com/MoeClub/Note/master/InstallNET.sh') -d 11 -v 64 -p $password -port $port -a -firmware
-                echo "脚本运行完成。按回车键返回菜单。"
-                read -r
-                continue
-                ;;
-            14|"")
-                echo "返回菜单。"
-                return
-                ;;
-            *)
-                echo "无效的选择，请重试。"
-                continue
-                ;;
-        esac
-
-        echo "账户：$account"
-        echo "密码：$password"
-
-        wget --no-check-certificate -qO InstallNET.sh 'https://suntl.com/other/oss/InstallNET.sh' && bash InstallNET.sh -dd "$dd_url"
-
-        echo "脚本运行完成。按回车键返回菜单。"
-        read -r
-    done
 }
 
 comprehensive_test_script() {
@@ -715,7 +458,6 @@ media_ip_quality_test_script() {
             echo "2) 苹果"
             read -p "请输入你的选择: " chatgpt_choice
 
-            # 定义一个函数来解析返回结果
             parse_result() {
                 local result=$1
                 if echo "$result" | grep -q '"cf_details"'; then
@@ -803,43 +545,45 @@ backtrace_test_script() {
     read -r
 }
 
-
 function_script() {
     clear
-    echo "选择一个功能脚本:"
+    echo "选择一个选项:"
     echo "1) Fail2ban"
-    echo "2) 一键开启BBR"
-    echo "3) 多功能BBR安装脚本"
-    echo "4) TCP窗口调优"
-    echo "5) 测试访问优先级"
-    echo "6) 添加SWAP"
-    echo "7) 25端口开放测试"
+    echo "2) 添加SWAP"
+    echo "3) 更改SSH端口"
     read -p "请输入你的选择: " function_choice
     case $function_choice in
         1)
             wget --no-check-certificate https://raw.githubusercontent.com/FunctionClub/Fail2ban/master/fail2ban.sh && bash fail2ban.sh 2>&1 | tee fail2ban.log
             ;;
         2)
-            echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
-            echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
-            sysctl -p
-            sysctl net.ipv4.tcp_available_congestion_control
-            lsmod | grep bbr
-            ;;
-        3)
-            wget -N --no-check-certificate "https://gist.github.com/zeruns/a0ec603f20d1b86de6a774a8ba27588f/raw/4f9957ae23f5efb2bb7c57a198ae2cffebfb1c56/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
-            ;;
-        4)
-            wget http://sh.nekoneko.cloud/tools.sh -O tools.sh && bash tools.sh
-            ;;
-        5)
-            curl ip.sb
-            ;;
-        6)
             wget https://www.moerats.com/usr/shell/swap.sh && bash swap.sh
             ;;
-        7)
-            telnet smtp.aol.com 25
+        3)
+            read -p "请输入新的SSH端口: " new_ssh_port
+            if [[ -z "$new_ssh_port" || ! "$new_ssh_port" =~ ^[0-9]+$ ]]; then
+                echo "无效的端口，请重试。"
+            else
+                sudo sed -i "s/^#Port 22/Port $new_ssh_port/" /etc/ssh/sshd_config
+                sudo sed -i "s/^Port [0-9]*/Port $new_ssh_port/" /etc/ssh/sshd_config
+                sudo systemctl restart sshd
+
+                if command -v ufw > /dev/null; then
+                    sudo ufw allow "$new_ssh_port"/tcp
+                    sudo ufw reload
+                    echo "UFW: 已放行端口 $new_ssh_port"
+                elif command -v firewall-cmd > /dev/null; then
+                    sudo firewall-cmd --permanent --add-port="$new_ssh_port"/tcp
+                    sudo firewall-cmd --reload
+                    echo "firewalld: 已放行端口 $new_ssh_port"
+                elif command -v iptables > /dev/null; then
+                    sudo iptables -A INPUT -p tcp --dport "$new_ssh_port" -j ACCEPT
+                    sudo iptables-save > /etc/iptables/rules.v4
+                    echo "iptables: 已放行端口 $new_ssh_port"
+                else
+                    echo "未检测到已知的防火墙，如有必要可手动放行 $new_ssh_port 端口"
+                fi
+            fi
             ;;
         *)
             echo "无效的选择，请重试。"
@@ -859,12 +603,15 @@ install_common_env_software() {
     echo "5) aaPanel(宝塔国际版)"
     echo "6) 宝塔"
     echo "7) 宝塔开心版"
+    echo "8) 1Panel"
+    echo "9) 耗子面板"
     read -p "请输入你的选择: " install_choice
     case $install_choice in
         1)
             echo "选择 docker 安装版本:"
             echo "1) 国外专用"
             echo "2) 国内专用"
+            echo "3) 自定义安装源"
             read -p "请输入你的选择: " docker_choice
             case $docker_choice in
                 1)
@@ -872,6 +619,14 @@ install_common_env_software() {
                     ;;
                 2)
                     curl -sSL https://get.daocloud.io/docker | sh
+                    ;;
+                3)
+                    read -p "请输入自定义Docker安装源URL: " custom_url
+                    if [[ -z "$custom_url" ]]; then
+                        echo "URL不能为空，请重试。"
+                    else
+                        curl -sSL "$custom_url" | sh
+                    fi
                     ;;
                 *)
                     echo "无效的选择，请重试。"
@@ -896,6 +651,28 @@ install_common_env_software() {
         7)
             echo "请访问：https://bt.sb/bbs/forum-37-1.html 获取"
             ;;
+        8)
+            curl -sSL https://resource.fit2cloud.com/1panel/package/quick_start.sh -o quick_start.sh && bash quick_start.sh
+            ;;
+        9)
+            echo "请选择操作："
+            echo "1) 安装耗子面板"
+            echo "2) 卸载耗子面板"
+            read -p "请输入你的选择: " haozi_choice
+            case $haozi_choice in
+                1)
+                    HAOZI_DL_URL="https://dl.cdn.haozi.net/panel"
+                    curl -sSL -O ${HAOZI_DL_URL}/install_panel.sh && curl -sSL -O ${HAOZI_DL_URL}/install_panel.sh.checksum.txt && sha256sum -c install_panel.sh.checksum.txt && bash install_panel.sh || echo "Checksum 验证失败，文件可能被篡改，已终止操作"
+                    ;;
+                2)
+                    HAOZI_DL_URL="https://dl.cdn.haozi.net/panel"
+                    curl -sSL -O ${HAOZI_DL_URL}/uninstall_panel.sh && curl -sSL -O ${HAOZI_DL_URL}/uninstall_panel.sh.checksum.txt && sha256sum -c uninstall_panel.sh.checksum.txt && bash uninstall_panel.sh || echo "Checksum 验证失败，文件可能被篡改，已终止操作"
+                    ;;
+                *)
+                    echo "无效的选择，请重试。"
+                    ;;
+            esac
+            ;;
         *)
             echo "无效的选择，请重试。"
             ;;
@@ -904,40 +681,70 @@ install_common_env_software() {
     read -r
 }
 
-
-install_mieru_script() {
-    clear
-    echo "运行Mieru 综合功能脚本..."
-    wget -N --no-check-certificate https://raw.githubusercontent.com/jianghulun123/mieru-script/main/mieru.sh && bash mieru.sh
-    echo "运行完成。按回车键返回菜单。"
-    read -r
-}
-
 while true; do
     clear
     show_menu
     read -p "请输入你的选择: " choice
     case $choice in
-        1) kernel_optimization ;;
-        2) install_and_test_nexttrace ;;
-        3) xray_management ;;
-        4) install_mieru_script ;;
-        5) install_or_start_btop ;;
-        6) install_techlion_script ;;
-        7) install_skybox_script ;;
-        8) install_v2bx_script ;;
-        9) install_ddns_script ;;
-        10) install_xboard ;;
-        11) chicken_king_script ;;
-        12) dd_reinstall_script ;;
-        13) comprehensive_test_script ;;
-        14) performance_test_script ;;
-        15) media_ip_quality_test_script ;;
-        16) network_speed_test_script ;;
-        17) backtrace_test_script ;;
-        18) function_script ;;
-        19) install_common_env_software ;;
-        20) echo "退出"; exit 0 ;;
+        1) 
+            while true; do
+                clear
+                network_menu
+                read -p "请输入你的选择: " net_choice
+                case $net_choice in
+                    1) kernel_optimization ;;
+                    2) install_and_test_nexttrace ;;
+                    3) install_ddns_script ;;
+                    4) chicken_king_script ;;
+                    5) enable_bbr ;;
+                    6) install_multifunction_bbr ;;
+                    7) tcp_window_tuning ;;
+                    8) test_access_priority ;;
+                    9) port_25_test ;;
+					10) adjust_ipv_priority ;;
+                    11) break ;;
+                    *) echo "无效的选择，请重试。" ;;
+                esac
+            done
+            ;;
+        2) 
+            while true; do
+                clear
+                proxy_menu
+                read -p "请输入你的选择: " proxy_choice
+                case $proxy_choice in
+                    1) xray_management ;;
+                    2) install_mieru_script ;;
+                    3) install_v2bx_script ;;
+					4) install_v2ray-agent_script ;;
+                    5) install_xboard ;;
+					6) install_Aurora_script ;;
+					7) install_xiandan_script ;;
+					8) install_hy2_script ;;
+                    9) break ;;
+                    *) echo "无效的选择，请重试。" ;;
+                esac
+            done
+            ;;
+        3) 
+            while true; do
+                clear
+                vps_test_menu
+                read -p "请输入你的选择: " vps_choice
+                case $vps_choice in
+                    1) comprehensive_test_script ;;
+                    2) performance_test_script ;;
+                    3) media_ip_quality_test_script ;;
+                    4) network_speed_test_script ;;
+                    5) backtrace_test_script ;;
+                    6) break ;;
+                    *) echo "无效的选择，请重试。" ;;
+                esac
+            done
+            ;;
+        4) function_script ;;
+        5) install_common_env_software ;;
+        6) echo "退出"; exit 0 ;;
         *) echo "无效的选择，请重试。"; read -r ;;
     esac
 done
