@@ -551,6 +551,9 @@ function_script() {
     echo -e "\033[32m1)\033[0m Fail2ban"
     echo -e "\033[32m2)\033[0m 添加SWAP"
     echo -e "\033[32m3)\033[0m 更改SSH端口"
+    echo -e "\033[32m4)\033[0m 科技lion一键脚本工具"
+    echo -e "\033[32m5)\033[0m BlueSkyXN 综合工具箱"
+    echo -e "\033[32m6)\033[0m 退出"
     read -p "请输入你的选择: " function_choice
     case $function_choice in
         1)
@@ -584,6 +587,16 @@ function_script() {
                     echo "未检测到已知的防火墙，如有必要可手动放行 $new_ssh_port 端口"
                 fi
             fi
+            ;;
+        4)
+            curl -sS -O https://kejilion.pro/kejilion.sh && chmod +x kejilion.sh && ./kejilion.sh
+            ;;
+        5)
+            wget -O box.sh https://raw.githubusercontent.com/BlueSkyXN/SKY-BOX/main/box.sh && chmod +x box.sh && clear && ./box.sh
+            ;;
+        6)
+            echo "退出脚本。"
+            exit 0
             ;;
         *)
             echo "无效的选择，请重试。"
