@@ -304,8 +304,8 @@ xray_management() {
 
 install_mieru_script() {
     clear
-    echo "运行Mieru 综合功能脚本..."
-    wget -N --no-check-certificate https://raw.githubusercontent.com/jianghulun123/mieru-script/main/mieru.sh && bash mieru.sh
+    echo "运行Mieru安装脚本..."
+    wget -N --no-check-certificate https://raw.githubusercontent.com/cccchiban/BCSB/main/mieru.sh && bash mieru.sh
     echo "运行完成。按回车键返回菜单。"
     read -r
 }
@@ -378,7 +378,7 @@ install_xboard() {
 
 install_hy2_script() {
     clear
-    echo "执行hy2脚本..."
+    echo "运行hy2安装脚本..."
     curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/hy2.sh && chmod +x hy2.sh && ./hy2.sh
     echo "安装完成。按回车键返回菜单。"
     read -r
