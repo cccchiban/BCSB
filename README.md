@@ -23,7 +23,9 @@ curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/BCSB.sh && chm
 - 25 端口开放测试
 - 调整 IPv4/IPv6 优先访问（非直接禁用）
 - 禁用启用 ICMP
-- 返回主菜单
+- warp
+- vnStat流量监控
+- iftop网络通信监控
 
 ### 2. 代理
 - xray 管理
@@ -34,7 +36,8 @@ curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/BCSB.sh && chm
 - 安装极光转发面板
 - 安装咸蛋转发面板
 - hy2 一键脚本
-- 返回主菜单
+- DNS解锁服务器搭建
+- 全网X-UI端口扫描
 
 ### 3. VPS 测试
 - 综合测试脚本
@@ -42,7 +45,6 @@ curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/BCSB.sh && chm
 - 流媒体及 IP 质量测试
 - 三网测速脚本
 - 回程测试
-- 返回主菜单
 
 ### 4. 其他功能
 - Fail2ban
@@ -51,11 +53,11 @@ curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/BCSB.sh && chm
 - 科技 lion 一键脚本工具
 - BlueSkyXN 综合工具箱
 - Docker 备份/恢复脚本
+- btop进程管理
 
 ### 5. 安装常用环境及软件
 - Docker
 - Python
-- WARP
 - Aria2
 - aaPanel（宝塔国际版）
 - 宝塔
