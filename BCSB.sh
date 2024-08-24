@@ -50,7 +50,8 @@ network_menu() {
     echo -e "\033[32m9)\033[0m 25端口开放测试"
     echo -e "\033[32m10)\033[0m 调整ipv4/6优先访问（非直接禁用）"
     echo -e "\033[32m11)\033[0m 禁用启用ICMP"
-    echo -e "\033[32m12)\033[0m 返回主菜单"
+    echo -e "\033[32m12)\033[0m WARP"
+    echo -e "\033[32m13)\033[0m 返回主菜单"
 }
 
 proxy_menu() {
@@ -309,6 +310,13 @@ manage_icmp() {
     read -r
 }
 
+install_warp_script() {
+    clear
+    echo "运行 WARP 安装脚本..."
+    wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
+    echo "运行完成。按回车键返回菜单。"
+    read -r
+}
 
 xray_management() {
     clear
@@ -579,170 +587,177 @@ backtrace_test_script() {
 }
 
 function_script() {
-    clear
-    echo "选择一个选项:"
-    echo -e "\033[32m1)\033[0m Fail2ban"
-    echo -e "\033[32m2)\033[0m 添加SWAP"
-    echo -e "\033[32m3)\033[0m 更改SSH端口"
-    echo -e "\033[32m4)\033[0m 科技lion一键脚本工具"
-    echo -e "\033[32m5)\033[0m BlueSkyXN 综合工具箱"
-    echo -e "\033[32m6)\033[0m Docker备份/恢复脚本"
-    echo -e "\033[32m7)\033[0m 退出"
-    read -p "请输入你的选择: " function_choice
-    case $function_choice in
-        1)
-            wget --no-check-certificate https://raw.githubusercontent.com/FunctionClub/Fail2ban/master/fail2ban.sh && bash fail2ban.sh 2>&1 | tee fail2ban.log
-            ;;
-        2)
-            wget https://www.moerats.com/usr/shell/swap.sh && bash swap.sh
-            ;;
-        3)
-            read -p "请输入新的SSH端口: " new_ssh_port
-            if [[ -z "$new_ssh_port" || ! "$new_ssh_port" =~ ^[0-9]+$ ]]; then
-                echo "无效的端口，请重试。"
-            else
-                sudo sed -i "s/^#Port 22/Port $new_ssh_port/" /etc/ssh/sshd_config
-                sudo sed -i "s/^Port [0-9]*/Port $new_ssh_port/" /etc/ssh/sshd_config
-                sudo systemctl restart sshd
-
-                if command -v ufw > /dev/null; then
-                    sudo ufw allow "$new_ssh_port"/tcp
-                    sudo ufw reload
-                    echo "UFW: 已放行端口 $new_ssh_port"
-                elif command -v firewall-cmd > /dev/null; then
-                    sudo firewall-cmd --permanent --add-port="$new_ssh_port"/tcp
-                    sudo firewall-cmd --reload
-                    echo "firewalld: 已放行端口 $new_ssh_port"
-                elif command -v iptables > /dev/null; then
-                    sudo iptables -A INPUT -p tcp --dport "$new_ssh_port" -j ACCEPT
-                    sudo iptables-save > /etc/iptables/rules.v4
-                    echo "iptables: 已放行端口 $new_ssh_port"
+    while true; do
+        clear
+        echo "选择一个选项:"
+        echo -e "\033[32m1)\033[0m Fail2ban"
+        echo -e "\033[32m2)\033[0m 添加SWAP"
+        echo -e "\033[32m3)\033[0m 更改SSH端口"
+        echo -e "\033[32m4)\033[0m 科技lion一键脚本工具"
+        echo -e "\033[32m5)\033[0m BlueSkyXN 综合工具箱"
+        echo -e "\033[32m6)\033[0m Docker备份/恢复脚本"
+        echo -e "\033[32m7)\033[0m 返回主菜单"
+        read -p "请输入你的选择: " function_choice
+        case $function_choice in
+            1)
+                wget --no-check-certificate https://raw.githubusercontent.com/FunctionClub/Fail2ban/master/fail2ban.sh && bash fail2ban.sh 2>&1 | tee fail2ban.log
+                ;;
+            2)
+                wget https://www.moerats.com/usr/shell/swap.sh && bash swap.sh
+                ;;
+            3)
+                read -p "请输入新的SSH端口: " new_ssh_port
+                if [[ -z "$new_ssh_port" || ! "$new_ssh_port" =~ ^[0-9]+$ ]]; then
+                    echo "无效的端口，请重试。"
                 else
-                    echo "未检测到已知的防火墙，如有必要可手动放行 $new_ssh_port 端口"
+                    sudo sed -i "s/^#Port 22/Port $new_ssh_port/" /etc/ssh/sshd_config
+                    sudo sed -i "s/^Port [0-9]*/Port $new_ssh_port/" /etc/ssh/sshd_config
+                    sudo systemctl restart sshd
+
+                    if command -v ufw > /dev/null; then
+                        sudo ufw allow "$new_ssh_port"/tcp
+                        sudo ufw reload
+                        echo "UFW: 已放行端口 $new_ssh_port"
+                    elif command -v firewall-cmd > /dev/null; then
+                        sudo firewall-cmd --permanent --add-port="$new_ssh_port"/tcp
+                        sudo firewall-cmd --reload
+                        echo "firewalld: 已放行端口 $new_ssh_port"
+                    elif command -v iptables > /dev/null; then
+                        sudo iptables -A INPUT -p tcp --dport "$new_ssh_port" -j ACCEPT
+                        sudo iptables-save > /etc/iptables/rules.v4
+                        echo "iptables: 已放行端口 $new_ssh_port"
+                    else
+                        echo "未检测到已知的防火墙，如有必要可手动放行 $new_ssh_port 端口"
+                    fi
                 fi
-            fi
-            ;;
-        4)
-            curl -sS -O https://kejilion.pro/kejilion.sh && chmod +x kejilion.sh && ./kejilion.sh
-            ;;
-        5)
-            wget -O box.sh https://raw.githubusercontent.com/BlueSkyXN/SKY-BOX/main/box.sh && chmod +x box.sh && clear && ./box.sh
-            ;;
-        6)
-            echo -e "\033[31m注意：本脚本未经实际测试能否正常运行，请谨慎使用，如遇报错欢迎反馈\033[0m"
-            echo -e "\033[32m1)\033[0m 备份Docker"
-            echo -e "\033[32m2)\033[0m 恢复Docker"
-            read -p "请输入你的选择: " docker_choice
-            case $docker_choice in
-                1)
-                    curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/bf.sh  && chmod +x bf.sh && ./bf.sh
-                    ;;
-                2)
-                    curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/hf.sh && chmod +x hf.sh && ./hf.sh
-                    ;;
-                *)
-                    echo "无效的选择，请重试。"
-                    ;;
-            esac
-            ;;
-        7)
-            echo "退出脚本。"
-            exit 0
-            ;;
-        *)
-            echo "无效的选择，请重试。"
-            ;;
-    esac
-    echo "脚本运行完成。按回车键返回菜单。"
-    read -r
+                ;;
+            4)
+                curl -sS -O https://kejilion.pro/kejilion.sh && chmod +x kejilion.sh && ./kejilion.sh
+                ;;
+            5)
+                wget -O box.sh https://raw.githubusercontent.com/BlueSkyXN/SKY-BOX/main/box.sh && chmod +x box.sh && clear && ./box.sh
+                ;;
+            6)
+                echo -e "\033[31m注意：本脚本未经实际测试能否正常运行，请谨慎使用，如遇报错欢迎反馈\033[0m"
+                echo -e "\033[32m1)\033[0m 备份Docker"
+                echo -e "\033[32m2)\033[0m 恢复Docker"
+                read -p "请输入你的选择: " docker_choice
+                case $docker_choice in
+                    1)
+                        curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/bf.sh  && chmod +x bf.sh && ./bf.sh
+                        ;;
+                    2)
+                        curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/hf.sh && chmod +x hf.sh && ./hf.sh
+                        ;;
+                    *)
+                        echo "无效的选择，请重试。"
+                        ;;
+                esac
+                ;;
+            7)
+                return
+                ;;
+            *)
+                echo "无效的选择，请重试。"
+                ;;
+        esac
+        echo "脚本运行完成。按回车键返回菜单。"
+        read -r
+    done
 }
 
 install_common_env_software() {
-    clear
-    echo "请选择要安装的项目:"
-    echo "1) docker"
-    echo "2) Python"
-    echo "3) WARP"
-    echo "4) Aria2"
-    echo "5) aaPanel(宝塔国际版)"
-    echo "6) 宝塔"
-    echo "7) 宝塔开心版"
-    echo "8) 1Panel"
-    echo "9) 耗子面板"
-    read -p "请输入你的选择: " install_choice
-    case $install_choice in
-        1)
-            echo "选择 docker 安装版本:"
-            echo "1) 国外专用"
-            echo "2) 国内专用"
-            echo "3) 自定义安装源"
-            read -p "请输入你的选择: " docker_choice
-            case $docker_choice in
-                1)
-                    curl -sSL https://get.docker.com/ | sh
-                    ;;
-                2)
-                    curl -sSL https://get.daocloud.io/docker | sh
-                    ;;
-                3)
-                    read -p "请输入自定义Docker安装源URL: " custom_url
-                    if [[ -z "$custom_url" ]]; then
-                        echo "URL不能为空，请重试。"
-                    else
-                        curl -sSL "$custom_url" | sh
-                    fi
-                    ;;
-                *)
-                    echo "无效的选择，请重试。"
-                    ;;
-            esac
-            ;;
-        2)
-            curl -O https://raw.githubusercontent.com/lx969788249/lxspacepy/master/pyinstall.sh && chmod +x pyinstall.sh && ./pyinstall.sh
-            ;;
-        3)
-            wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
-            ;;
-        4)
-            wget -N git.io/aria2.sh && chmod +x aria2.sh && ./aria2.sh
-            ;;
-        5)
-            URL=https://www.aapanel.com/script/install_7.0_en.sh && if [ -f /usr/bin/curl ];then curl -ksSO "$URL" ;else wget --no-check-certificate -O install_7.0_en.sh "$URL";fi;bash install_7.0_en.sh aapanel
-            ;;
-        6)
-            url=https://download.bt.cn/install/install_lts.sh;if [ -f /usr/bin/curl ];then curl -sSO $url;else wget -O install_lts.sh $url;fi;bash install_lts.sh ed8484bec
-            ;;
-        7)
-            echo "请访问：https://bt.sb/bbs/forum-37-1.html 获取"
-            ;;
-        8)
-            curl -sSL https://resource.fit2cloud.com/1panel/package/quick_start.sh -o quick_start.sh && bash quick_start.sh
-            ;;
-        9)
-            echo "请选择操作："
-            echo "1) 安装耗子面板"
-            echo "2) 卸载耗子面板"
-            read -p "请输入你的选择: " haozi_choice
-            case $haozi_choice in
-                1)
-                    HAOZI_DL_URL="https://dl.cdn.haozi.net/panel"
-                    curl -sSL -O ${HAOZI_DL_URL}/install_panel.sh && curl -sSL -O ${HAOZI_DL_URL}/install_panel.sh.checksum.txt && sha256sum -c install_panel.sh.checksum.txt && bash install_panel.sh || echo "Checksum 验证失败，文件可能被篡改，已终止操作"
-                    ;;
-                2)
-                    HAOZI_DL_URL="https://dl.cdn.haozi.net/panel"
-                    curl -sSL -O ${HAOZI_DL_URL}/uninstall_panel.sh && curl -sSL -O ${HAOZI_DL_URL}/uninstall_panel.sh.checksum.txt && sha256sum -c uninstall_panel.sh.checksum.txt && bash uninstall_panel.sh || echo "Checksum 验证失败，文件可能被篡改，已终止操作"
-                    ;;
-                *)
-                    echo "无效的选择，请重试。"
-                    ;;
-            esac
-            ;;
-        *)
-            echo "无效的选择，请重试。"
-            ;;
-    esac
-    echo "脚本运行完成。按回车键返回菜单。"
-    read -r
+    while true; do
+        clear
+        echo -e "\033[32m请选择要安装的项目:\033[0m"
+        echo -e "\033[32m1)\033[0m docker"
+        echo -e "\033[32m2)\033[0m Python"
+        echo -e "\033[32m3)\033[0m Aria2"
+        echo -e "\033[32m4)\033[0m aaPanel(宝塔国际版)"
+        echo -e "\033[32m5)\033[0m 宝塔"
+        echo -e "\033[32m6)\033[0m 宝塔开心版"
+        echo -e "\033[32m7)\033[0m 1Panel"
+        echo -e "\033[32m8)\033[0m 耗子面板"
+        echo -e "\033[32m9)\033[0m 哪吒监控"
+        echo -e "\033[32m10)\033[0m 返回主菜单"
+        read -p "请输入你的选择: " install_choice
+        case $install_choice in
+            1)
+                echo "选择 docker 安装版本:"
+                echo "1) 国外专用"
+                echo "2) 国内专用"
+                echo "3) 自定义安装源"
+                read -p "请输入你的选择: " docker_choice
+                case $docker_choice in
+                    1)
+                        curl -sSL https://get.docker.com/ | sh
+                        ;;
+                    2)
+                        curl -sSL https://get.daocloud.io/docker | sh
+                        ;;
+                    3)
+                        read -p "请输入自定义Docker安装源URL: " custom_url
+                        if [[ -z "$custom_url" ]]; then
+                            echo "URL不能为空，请重试。"
+                        else
+                            curl -sSL "$custom_url" | sh
+                        fi
+                        ;;
+                    *)
+                        echo "无效的选择，请重试。"
+                        ;;
+                esac
+                ;;
+            2)
+                curl -O https://raw.githubusercontent.com/lx969788249/lxspacepy/master/pyinstall.sh && chmod +x pyinstall.sh && ./pyinstall.sh
+                ;;
+            3)
+                wget -N git.io/aria2.sh && chmod +x aria2.sh && ./aria2.sh
+                ;;
+            4)
+                URL=https://www.aapanel.com/script/install_7.0_en.sh && if [ -f /usr/bin/curl ];then curl -ksSO "$URL" ;else wget --no-check-certificate -O install_7.0_en.sh "$URL";fi;bash install_7.0_en.sh aapanel
+                ;;
+            5)
+                url=https://download.bt.cn/install/install_lts.sh;if [ -f /usr/bin/curl ];then curl -sSO $url;else wget -O install_lts.sh $url;fi;bash install_lts.sh ed8484bec
+                ;;
+            6)
+                echo "请访问：https://bt.sb/bbs/forum-37-1.html 获取"
+                ;;
+            7)
+                curl -sSL https://resource.fit2cloud.com/1panel/package/quick_start.sh -o quick_start.sh && bash quick_start.sh
+                ;;
+            8)
+                echo "请选择操作："
+                echo "1) 安装耗子面板"
+                echo "2) 卸载耗子面板"
+                read -p "请输入你的选择: " haozi_choice
+                case $haozi_choice in
+                    1)
+                        HAOZI_DL_URL="https://dl.cdn.haozi.net/panel"
+                        curl -sSL -O ${HAOZI_DL_URL}/install_panel.sh && curl -sSL -O ${HAOZI_DL_URL}/install_panel.sh.checksum.txt && sha256sum -c install_panel.sh.checksum.txt && bash install_panel.sh || echo "Checksum 验证失败，文件可能被篡改，已终止操作"
+                        ;;
+                    2)
+                        HAOZI_DL_URL="https://dl.cdn.haozi.net/panel"
+                        curl -sSL -O ${HAOZI_DL_URL}/uninstall_panel.sh && curl -sSL -O ${HAOZI_DL_URL}/uninstall_panel.sh.checksum.txt && sha256sum -c uninstall_panel.sh.checksum.txt && bash uninstall_panel.sh || echo "Checksum 验证失败，文件可能被篡改，已终止操作"
+                        ;;
+                    *)
+                        echo "无效的选择，请重试。"
+                        ;;
+                esac
+                ;;
+            9)
+                curl -L https://raw.githubusercontent.com/naiba/nezha/master/script/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
+                ;;
+            10)
+                break
+                ;;
+            *)
+                echo "无效的选择，请重试。"
+                ;;
+        esac
+        echo "脚本运行完成。按回车键返回菜单。"
+        read -r
+    done
 }
 
 while true; do
@@ -767,7 +782,8 @@ while true; do
                     9) port_25_test ;;
 		    10) adjust_ipv_priority ;;
                     11) manage_icmp ;;
-                    12) break ;;
+		    12) install_warp_script ;;
+                    13) break ;;
                     *) echo "无效的选择，请重试。" ;;
                 esac
             done
