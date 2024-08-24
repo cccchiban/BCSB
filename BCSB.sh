@@ -586,7 +586,8 @@ function_script() {
     echo -e "\033[32m3)\033[0m 更改SSH端口"
     echo -e "\033[32m4)\033[0m 科技lion一键脚本工具"
     echo -e "\033[32m5)\033[0m BlueSkyXN 综合工具箱"
-    echo -e "\033[32m6)\033[0m 退出"
+    echo -e "\033[32m6)\033[0m Docker备份/恢复脚本"
+    echo -e "\033[32m7)\033[0m 退出"
     read -p "请输入你的选择: " function_choice
     case $function_choice in
         1)
@@ -628,6 +629,23 @@ function_script() {
             wget -O box.sh https://raw.githubusercontent.com/BlueSkyXN/SKY-BOX/main/box.sh && chmod +x box.sh && clear && ./box.sh
             ;;
         6)
+            echo -e "\033[31m注意：本脚本未经实际测试能否正常运行，请谨慎使用，如遇报错欢迎反馈\033[0m"
+            echo -e "\033[32m1)\033[0m 备份Docker"
+            echo -e "\033[32m2)\033[0m 恢复Docker"
+            read -p "请输入你的选择: " docker_choice
+            case $docker_choice in
+                1)
+                    curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/bf.sh  && chmod +x bf.sh && ./bf.sh
+                    ;;
+                2)
+                    curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/hf.sh && chmod +x hf.sh && ./hf.sh
+                    ;;
+                *)
+                    echo "无效的选择，请重试。"
+                    ;;
+            esac
+            ;;
+        7)
             echo "退出脚本。"
             exit 0
             ;;
