@@ -62,3 +62,4 @@ curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/BCSB.sh && chm
 - 宝塔开心版
 - 1Panel
 - 耗子面板
+- 哪吒面板
