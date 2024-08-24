@@ -843,7 +843,7 @@ function_script() {
         echo -e "\033[32m4)\033[0m 科技lion一键脚本工具"
         echo -e "\033[32m5)\033[0m BlueSkyXN 综合工具箱"
         echo -e "\033[32m6)\033[0m Docker备份/恢复脚本"
-        echo -e "\033[32m7)\033[[32m8)\033[0m btop进程管理"
+        echo -e "\033[32m7)\033[0m btop进程管理"
         echo -e "\033[32m8)\033[0m 返回主菜单"
         read -p "请输入你的选择: " function_choice
         case $function_choice in
