@@ -53,8 +53,8 @@ network_menu() {
     echo -e "\033[32m10)\033[0m 调整ipv4/6优先访问（非直接禁用）"
     echo -e "\033[32m11)\033[0m 禁用启用ICMP"
     echo -e "\033[32m12)\033[0m WARP"
-	echo -e "\033[32m13)\033[0m vnStat流量监控"
-	echo -e "\033[32m14)\033[0m iftop网络通信监控"
+    echo -e "\033[32m13)\033[0m vnStat流量监控"
+    echo -e "\033[32m14)\033[0m iftop网络通信监控"
     echo -e "\033[32m15)\033[0m 返回主菜单"
 }
 
@@ -63,14 +63,14 @@ proxy_menu() {
     echo -e "\033[32m1)\033[0m xray管理"
     echo -e "\033[32m2)\033[0m 安装mieru（改自MisakaNo）"
     echo -e "\033[32m3)\033[0m v2bx一键安装脚本"
-	echo -e "\033[32m4)\033[0m v2ray-agent八合一一键脚本"
+    echo -e "\033[32m4)\033[0m v2ray-agent八合一一键脚本"
     echo -e "\033[32m5)\033[0m 安装 Xboard"
-	echo -e "\033[32m6)\033[0m 安装极光转发面板"
-	echo -e "\033[32m7)\033[0m 安装咸蛋转发面板"
-	echo -e "\033[32m8)\033[0m hy2一键脚本"
-	echo -e "\033[32m9)\033[0m DNS解锁服务器搭建"
-	echo -e "\033[32m10)\033[0m X-UI弱密码全网扫描"
-    echo -e "\033[32m11)\033[0m 返回主菜单echo -e "\033[32m8)\033[0m hy2一键脚本""
+    echo -e "\033[32m6)\033[0m 安装极光转发面板"
+    echo -e "\033[32m7)\033[0m 安装咸蛋转发面板"
+    echo -e "\033[32m8)\033[0m hy2一键脚本"
+    echo -e "\033[32m9)\033[0m DNS解锁服务器搭建"
+    echo -e "\033[32m10)\033[0m X-UI弱密码全网扫描"
+    echo -e "\033[32m11)\033[0m 返回主菜单"
 }
 
 vps_test_menu() {
@@ -200,7 +200,6 @@ install_ddns_script() {
     echo "运行完成。按回车键返回菜单。"
     read -r
 }
-
 
 chicken_king_script() {
     echo "剑皇在路上..."
@@ -585,8 +584,8 @@ install_dns_unlock_script() {
 
 port_scan_and_management() {
     clear
-	echo "方法来自https://www.nodeseek.com/post-1084-1"
-	echo "端口扫描有可能导致vps清退或收到abuse，请谨慎操作"
+    echo "方法来自https://www.nodeseek.com/post-1084-1"
+    echo "端口扫描有可能导致vps清退或收到abuse，请谨慎操作"
     echo "1) 安装端口扫描工具并进行端口扫描和弱口令尝试"
     echo "2) 卸载端口扫描工具"
     echo "3) 退出"
@@ -844,7 +843,7 @@ function_script() {
         echo -e "\033[32m4)\033[0m 科技lion一键脚本工具"
         echo -e "\033[32m5)\033[0m BlueSkyXN 综合工具箱"
         echo -e "\033[32m6)\033[0m Docker备份/恢复脚本"
-        echo -e "\033[32m7)\033[0m btop进程管理"
+        echo -e "\033[32m7)\033[[32m8)\033[0m btop进程管理"
         echo -e "\033[32m8)\033[0m 返回主菜单"
         read -p "请输入你的选择: " function_choice
         case $function_choice in
@@ -911,11 +910,11 @@ function_script() {
                 case $btop_choice in
                     1)
                         sudo apt-get update
-                        sudo apt install htop
-                        htop
+                        sudo apt install btop
+                        btop
                         ;;
                     2)
-                        sudo apt-get remove --purge htop
+                        sudo apt-get remove --purge btop
                         echo "btop已卸载。"
                         ;;
                     3)
@@ -1051,11 +1050,11 @@ while true; do
                     7) tcp_window_tuning ;;
                     8) test_access_priority ;;
                     9) port_25_test ;;
-		            10) adjust_ipv_priority ;;
+                    10) adjust_ipv_priority ;;
                     11) manage_icmp ;;
-		            12) install_warp_script ;;
-					13) manage_vnstat ;;
-					14) manage_iftop ;;
+                    12) install_warp_script ;;
+                    13) manage_vnstat ;;
+                    14) manage_iftop ;;
                     15) break ;;
                     *) echo "无效的选择，请重试。" ;;
                 esac
@@ -1070,13 +1069,13 @@ while true; do
                     1) xray_management ;;
                     2) install_mieru_script ;;
                     3) install_v2bx_script ;;
-					4) install_v2ray-agent_script ;;
+                    4) install_v2ray-agent_script ;;
                     5) install_xboard ;;
-					6) install_Aurora_script ;;
-					7) install_xiandan_script ;;
-					8) install_hy2_script ;;
-					9) install_dns_unlock_script ;;
-					10) port_scan_and_management ;;
+                    6) install_Aurora_script ;;
+                    7) install_xiandan_script ;;
+                    8) install_hy2_script ;;
+                    9) install_dns_unlock_script ;;
+                    10) port_scan_and_management ;;
                     11) break ;;
                     *) echo "无效的选择，请重试。" ;;
                 esac
