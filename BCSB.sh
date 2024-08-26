@@ -31,7 +31,7 @@ install_if_missing wget
 
 show_menu() {
     echo -e "\033[32m请选择一个操作:\033[0m"
-    echo -e "\033[32m1)\033[0m 网络"
+    echo -e "\033[32m1)\033[0m 网络/性能"
     echo -e "\033[32m2)\033[0m 代理"
     echo -e "\033[32m3)\033[0m VPS测试"
     echo -e "\033[32m4)\033[0m 其他功能"
@@ -55,7 +55,8 @@ network_menu() {
     echo -e "\033[32m12)\033[0m WARP"
     echo -e "\033[32m13)\033[0m vnStat流量监控"
     echo -e "\033[32m14)\033[0m iftop网络通信监控"
-    echo -e "\033[32m15)\033[0m 返回主菜单"
+	echo -e "\033[32m15)\033[0m 安装cloud低占用内核"
+    echo -e "\033[32m16)\033[0m 返回主菜单"
 }
 
 proxy_menu() {
@@ -70,7 +71,9 @@ proxy_menu() {
     echo -e "\033[32m8)\033[0m hy2一键脚本"
     echo -e "\033[32m9)\033[0m DNS解锁服务器搭建"
     echo -e "\033[32m10)\033[0m X-UI弱密码全网扫描"
-    echo -e "\033[32m11)\033[0m 返回主菜单"
+	echo -e "\033[32m11)\033[0m ss-plugins（支持ss2022+流量混淆）"
+	echo -e "\033[32m12)\033[0m 233boy/xray一键脚本"
+    echo -e "\033[32m13)\033[0m 返回主菜单"
 }
 
 vps_test_menu() {
@@ -409,6 +412,53 @@ manage_iftop() {
                 echo "无效的选择，请重试。"
                 read -p "按任意键继续..."
                 ;;
+        esac
+    done
+}
+
+install_and_remove_old_kernel() {
+    clear
+
+    if [ "$(uname -m)" != "x86_64" ]; then
+        echo "错误：此脚本仅支持64位系统。"
+        echo "请使用64位系统运行此脚本。按回车键返回菜单。"
+        read -r
+        return
+    fi
+
+    echo "更新包列表..."
+    sudo apt-get update
+
+    echo "查找当前内核版本..."
+    current_kernel=$(uname -r)
+    echo "当前内核版本：$current_kernel"
+
+    echo "查找已安装的内核包..."
+    installed_kernels=$(dpkg --list | grep linux-image | grep -v "$current_kernel" | awk '{print $2}')
+    echo "已安装的内核包：$installed_kernels"
+
+    echo "卸载旧内核..."
+    for kernel in $installed_kernels; do
+        sudo apt-get remove -y --purge "$kernel"
+    done
+
+    echo "安装 linux-image-cloud-amd64 内核..."
+    sudo apt-get install -y linux-image-cloud-amd64
+
+    echo "清理无用的包..."
+    sudo apt-get autoremove --purge -y
+
+    echo "更新 GRUB 配置..."
+    sudo update-grub
+
+    echo "linux-image-cloud-amd64 内核安装完成，旧内核已卸载。"
+
+    while true; do
+        read -p "是否立即重启系统以使新内核生效？（y/n）: " yn
+        case $yn in
+            [Yy]* ) echo "系统将在几秒钟后重启..."; sleep 3; sudo reboot; break;;
+            [Nn]* ) echo "请记得稍后手动重启系统以使新内核生效。按回车键返回菜单。"; read -r; break;;
+            * ) echo "请输入 y 或 n。";;
         esac
     done
 }
@@ -923,6 +973,23 @@ port_scan_and_management() {
     read -r
 }
 
+install_ss_plugins() {
+    clear
+    echo "脚本来自：https://github.com/loyess/Shell"
+    wget -N --no-check-certificate -c -t3 -T60 -O ss-plugins.sh https://git.io/fjlbl
+    chmod +x ss-plugins.sh
+    ./ss-plugins.sh
+    echo "ss-plugins 安装脚本运行完成。按回车键返回菜单。"
+    read -r
+}
+
+233boy_xray() {
+    clear
+    bash <(wget -qO- -o- https://github.com/233boy/Xray/raw/main/install.sh)
+    echo "Xray 安装脚本运行完成。按回车键返回菜单。"
+    read -r
+}
+
 comprehensive_test_script() {
     clear
     echo "选择一个综合测试脚本:"
@@ -1306,7 +1373,8 @@ while true; do
                     12) install_warp_script ;;
                     13) manage_vnstat ;;
                     14) manage_iftop ;;
-                    15) break ;;
+					15) install_and_remove_old_kernel ;;
+                    16) break ;;
                     *) echo "无效的选择，请重试。" ;;
                 esac
             done
@@ -1327,7 +1395,9 @@ while true; do
                     8) install_hy2_script ;;
                     9) install_dns_unlock_script ;;
                     10) port_scan_and_management ;;
-                    11) break ;;
+					11) install_ss_plugins ;;
+					12) 233boy_xray ;;
+                    13) break ;;
                     *) echo "无效的选择，请重试。" ;;
                 esac
             done
