@@ -1,6 +1,6 @@
 
 
-## BCSB
+## BCSB一键脚本
 
 
 使用以下命令下载并运行脚本：
@@ -26,6 +26,7 @@ curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/BCSB.sh && chm
 - warp
 - vnStat流量监控
 - iftop网络通信监控
+- ......
 
 ### 2. 代理
 - xray 管理
@@ -38,6 +39,7 @@ curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/BCSB.sh && chm
 - hy2 一键脚本
 - DNS解锁服务器搭建
 - 全网X-UI端口扫描
+- ......
 
 ### 3. VPS 测试
 - 综合测试脚本
@@ -45,6 +47,7 @@ curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/BCSB.sh && chm
 - 流媒体及 IP 质量测试
 - 三网测速脚本
 - 回程测试
+- ......
 
 ### 4. 其他功能
 - Fail2ban
@@ -54,6 +57,7 @@ curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/BCSB.sh && chm
 - BlueSkyXN 综合工具箱
 - Docker 备份/恢复脚本
 - btop进程管理
+- ......
 
 ### 5. 安装常用环境及软件
 - Docker
@@ -65,3 +69,4 @@ curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/BCSB.sh && chm
 - 1Panel
 - 耗子面板
 - 哪吒面板
+- ......
