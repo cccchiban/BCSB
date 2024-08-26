@@ -55,7 +55,7 @@ network_menu() {
     echo -e "\033[32m12)\033[0m WARP"
     echo -e "\033[32m13)\033[0m vnStat流量监控"
     echo -e "\033[32m14)\033[0m iftop网络通信监控"
-	echo -e "\033[32m15)\033[0m 安装cloud低占用内核"
+    echo -e "\033[32m15)\033[0m 安装cloud低占用内核"
     echo -e "\033[32m16)\033[0m 返回主菜单"
 }
 
@@ -71,8 +71,8 @@ proxy_menu() {
     echo -e "\033[32m8)\033[0m hy2一键脚本"
     echo -e "\033[32m9)\033[0m DNS解锁服务器搭建"
     echo -e "\033[32m10)\033[0m X-UI弱密码全网扫描"
-	echo -e "\033[32m11)\033[0m ss-plugins（支持ss2022+流量混淆）"
-	echo -e "\033[32m12)\033[0m 233boy/xray一键脚本"
+    echo -e "\033[32m11)\033[0m ss-plugins（支持ss2022+流量混淆）"
+    echo -e "\033[32m12)\033[0m 233boy/xray一键脚本"
     echo -e "\033[32m13)\033[0m 返回主菜单"
 }
 
