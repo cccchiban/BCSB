@@ -1278,7 +1278,8 @@ install_common_env_software() {
         echo -e "\033[32m7)\033[0m 1Panel"
         echo -e "\033[32m8)\033[0m 耗子面板"
         echo -e "\033[32m9)\033[0m 哪吒监控"
-        echo -e "\033[32m10)\033[0m 返回主菜单"
+	echo -e "\033[32m10)\033[0m MCSManager MC开服面板"
+        echo -e "\033[32m11)\033[0m 返回主菜单"
         read -p "请输入你的选择: " install_choice
         case $install_choice in
             1)
@@ -1348,6 +1349,36 @@ install_common_env_software() {
                 curl -L https://raw.githubusercontent.com/naiba/nezha/master/script/install.sh -o nezha.sh && chmod +x nezha.sh && sudo ./nezha.sh
                 ;;
             10)
+                echo "请选择操作："
+                echo "1) 安装 MCSManager MC开服面板"
+                echo "2) 手动安装 MCSManager (适用于安装失败的情况)"
+                read -p "请输入你的选择: " mcsmanager_choice
+                case $mcsmanager_choice in
+                    1)
+                        sudo su -c "wget -qO- https://script.mcsmanager.com/setup_cn.sh | bash"
+                        ;;
+                    2)
+                        cd /opt/
+                        wget https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz
+                        tar -xvf node-v20.11.0-linux-x64.tar.xz
+                        ln -s /opt/node-v20.11.0-linux-x64/bin/node /usr/bin/node
+                        ln -s /opt/node-v20.11.0-linux-x64/bin/npm /usr/bin/npm
+                        mkdir /opt/mcsmanager/
+                        cd /opt/mcsmanager/
+                        wget https://github.com/MCSManager/MCSManager/releases/latest/download/mcsmanager_linux_release.tar.gz
+                        tar -zxf mcsmanager_linux_release.tar.gz
+                        ./install.sh
+                        echo -e "\033[32m请打开两个终端或screen来运行以下命令：\033[0m"
+                        echo "./start-daemon.sh"
+                        echo "./start-web.sh"
+                        echo "访问地址：http://localhost:23333/"
+                        ;;
+                    *)
+                        echo "无效的选择，请重试。"
+                        ;;
+                esac
+                ;;
+            11)
                 break
                 ;;
             *)
