@@ -1168,7 +1168,8 @@ function_script() {
         echo -e "\033[32m5)\033[0m BlueSkyXN 综合工具箱"
         echo -e "\033[32m6)\033[0m Docker备份/恢复脚本"
         echo -e "\033[32m7)\033[0m btop进程管理"
-        echo -e "\033[32m8)\033[0m 返回主菜单"
+	echo -e "\033[32m8)\033[0m BetterForward tg群组机器人替身"
+        echo -e "\033[32m9)\033[0m 返回主菜单"
         read -p "请输入你的选择: " function_choice
         case $function_choice in
             1)
@@ -1249,6 +1250,10 @@ function_script() {
                 esac
                 ;;
             8)
+                curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/BetterForward.sh && chmod +x BetterForward.sh && ./BetterForward.sh
+                ;;
+
+            9)
                 return
                 ;;
             *)
