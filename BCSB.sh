@@ -1133,8 +1133,9 @@ network_speed_test_script() {
 backtrace_test_script() {
     clear
     echo "选择一个回程测试脚本:"
-    echo -e "\033[32m1)\033[0m 直接显示回程（小白用这个）"
-    echo -e "\033[32m2)\033[0m 回程详细测试（推荐）"
+    echo -e "\033[32m1)\033[0m 直接显示回程"
+    echo -e "\033[32m2)\033[0m 回程详细测试"
+    echo -e "\033[32m3)\033[0m backtrace重构版（推荐）"
     read -p "请输入你的选择: " backtrace_choice
     case $backtrace_choice in
         1)
@@ -1142,6 +1143,11 @@ backtrace_test_script() {
             ;;
         2)
             wget https://ghproxy.com/https://raw.githubusercontent.com/vpsxb/testrace/main/testrace.sh -O testrace.sh && bash testrace.sh
+            ;;
+        3)
+            wget https://ghproxy.com/https://raw.githubusercontent.com/vpsxb/testrace/main/testrace.sh -O testrace.sh && bash testrace.sh <<EOF
+backtrace
+EOF
             ;;
         *)
             echo "无效的选择，请重试。"
