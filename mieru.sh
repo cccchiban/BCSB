@@ -8,15 +8,15 @@ YELLOW="\033[33m"
 PLAIN="\033[0m"
 
 red(){
-    echo -e "${RED}${1}${PLAIN}"
+    echo -e "\033[31m\033[01m$1\033[0m"
 }
 
 green(){
-    echo -e "${GREEN}${1}${PLAIN}"
+    echo -e "\033[32m\033[01m$1\033[0m"
 }
 
 yellow(){
-    echo -e "${YELLOW}${1}${PLAIN}"
+    echo -e "\033[33m\033[01m$1\033[0m"
 }
 
 REGEX=("debian" "ubuntu" "centos|red hat|kernel|oracle linux|alma|rocky" "'amazon linux'" "fedora")
@@ -54,22 +54,21 @@ check_ip() {
 }
 
 inst_mita(){
-    if [[ $SYSTEM != "CentOS" ]]; then
+    if [[ ! $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_UPDATE[int]}
     fi
-    ${PACKAGE_INSTALL[int]} curl wget sudo
+    ${PACKAGE_INSTALL} curl wget sudo
 
     last_version=$(curl -s https://data.jsdelivr.com/v1/package/gh/enfein/mieru | sed -n 4p | tr -d ',"' | awk '{print $1}')
     if [[ $SYSTEM == "CentOS" ]]; then
-        arch=$(archAffix)
+        [[ $(archAffix) == "amd64" ]] && arch="x86_64" || [[ $(archAffix) == "arm64" ]] && arch="aarch64"
         wget -N https://github.com/enfein/mieru/releases/download/v"$last_version"/mita-"$last_version"-1."$arch".rpm
         rpm -ivh mita-$last_version-1.$arch.rpm
         rm -f mita-$last_version-1.$arch.rpm
     else
-        arch=$(archAffix)
-        wget -N https://github.com/enfein/mieru/releases/download/v"$last_version"/mita_"$last_version"_$arch.deb
-        dpkg -i mita_"$last_version"_$arch.deb
-        rm -f mita_"$last_version"_$arch.deb
+        wget -N https://github.com/enfein/mieru/releases/download/v"$last_version"/mita_"$last_version"_$(archAffix).deb
+        dpkg -i mita_"$last_version"_$(archAffix).deb
+        rm -f mita_"$last_version"_$(archAffix).deb
     fi
 
     edit_conf
@@ -104,7 +103,7 @@ edit_conf(){
     [[ -z $port ]] && port=$(shuf -i 2000-65535 -n 1)
     until [[ -z $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$port") ]]; do
         if [[ -n $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$port") ]]; then
-            red "$port 端口已经被其他程序占用，请更换端口重试！"
+            echo -e "${RED} $port ${PLAIN} 端口已经被其他程序占用，请更换端口重试！"
             read -p "设置 mieru 端口 [1-65535]（回车则随机分配端口）：" port
             [[ -z $port ]] && port=$(shuf -i 2000-65535 -n 1)
         fi
@@ -162,58 +161,83 @@ edit_conf(){
     done
     # 将 MTU 最佳值放置至 MTU 变量中备用
     MTU=$((${MTUy} - 80))
-    green "MTU 最佳值 = $MTU 已设置完成!"
+    green "MTU 最佳值 = $MTU 已设置完毕！"
 
-    tee /etc/mita/mita_config.json <<-EOF
+    cat <<EOF > /etc/mita/mita_config.json
 {
-    "port": "${port}",
-    "protocol": "${protocol}",
-    "users": [
+    "port": $port,
+    "user": {
+        "name": "$user_name",
+        "password": "$auth_pass"
+    },
+    "protocol": "$protocol",
+    "mtu": $MTU
+}
+EOF
+
+    # 创建客户端配置
+    rm -rf /root/mieru
+    mkdir /root/mieru >/dev/null 2>&1
+    cat <<EOF > /root/mieru/client_config.json
+{
+    "profiles": [
         {
-            "username": "${user_name}",
-            "password": "${auth_pass}"
+            "profileName": "default",
+            "user": {
+                "name": "$user_name",
+                "password": "$auth_pass"
+            },
+            "servers": [
+                {
+                    "ipAddress": "$ip",
+                    "domainName": "",
+                    "portBindings": [
+                        {
+                            "port": $port,
+                            "protocol": "$protocol"
+                        }
+                    ]
+                }
+            ],
+            "mtu": 1400
         }
     ],
-    "system": {
-        "network": {
-            "auto_mtu": ${MTU}
-        }
-    }
+    "activeProfile": "default",
+    "rpcPort": 8964,
+    "socks5Port": 3080,
+    "loggingLevel": "INFO"
 }
 EOF
 
     mita start
-    green "mieru 配置已完成!"
+    result=$(mita status)
+    if [[ $result =~ "mita server status is \"RUNNING\"" ]]; then
+        green "mieru 服务启动成功！"
+    else
+        red "mieru 服务启动失败，脚本退出！" && exit 1
+    fi
+
+    yellow "客户端配置如下，并已保存至 /root/mieru/client_config.json"
+    red "$(cat /root/mieru/client_config.json)\n"
 }
 
-start_menu(){
-    clear
-    green " 1. 安装 mieru"
-    green " 2. 卸载 mieru"
-    green " 3. 启动/关闭/重启 mieru"
-    yellow " 0. 退出"
-    echo
-    read -rp "请输入数字: " num
-    case "$num" in
-        1)
-            inst_mita
-            ;;
-        2)
-            unst_mita
-            ;;
-        3)
-            mita_switch
-            ;;
-        0)
-            exit 0
-            ;;
-        *)
-            clear
-            red "请输入正确的数字"
-            sleep 1s
-            start_menu
-            ;;
+# Main Menu
+while true; do
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    echo "  Mieru Installer & Manager"
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} 安装 Mieru"
+    echo -e " ${GREEN}2.${PLAIN} 卸载 Mieru"
+    echo -e " ${GREEN}3.${PLAIN} 管理 Mieru"
+    echo -e " ${GREEN}4.${PLAIN} 退出"
+    echo ""
+    read -rp "请输入选项 [1-4]: " input
+    case $input in
+        1 ) inst_mita ;;
+        2 ) unst_mita ;;
+        3 ) mita_switch ;;
+        4 ) exit 0 ;;
+        * ) red "请输入正确的数字!" ;;
     esac
-}
-
-start_menu
+done
