@@ -8,18 +8,17 @@ YELLOW="\033[33m"
 PLAIN="\033[0m"
 
 red(){
-    echo -e "\033[31m\033[01m$1\033[0m"
+    echo -e "${RED}${1}${PLAIN}"
 }
 
 green(){
-    echo -e "\033[32m\033[01m$1\033[0m"
+    echo -e "${GREEN}${1}${PLAIN}"
 }
 
 yellow(){
-    echo -e "\033[33m\033[01m$1\033[0m"
+    echo -e "${YELLOW}${1}${PLAIN}"
 }
 
-# 判断系统及定义系统安装依赖方式
 REGEX=("debian" "ubuntu" "centos|red hat|kernel|oracle linux|alma|rocky" "'amazon linux'" "fedora")
 RELEASE=("Debian" "Ubuntu" "CentOS" "CentOS" "Fedora")
 PACKAGE_UPDATE=("apt-get update" "apt-get update" "yum -y update" "yum -y update" "yum -y update")
@@ -55,24 +54,25 @@ check_ip() {
 }
 
 inst_mita(){
-    if [[ ! $SYSTEM == "CentOS" ]]; then
+    if [[ $SYSTEM != "CentOS" ]]; then
         ${PACKAGE_UPDATE[int]}
     fi
-    ${PACKAGE_INSTALL} curl wget sudo
+    ${PACKAGE_INSTALL[int]} curl wget sudo
 
     last_version=$(curl -s https://data.jsdelivr.com/v1/package/gh/enfein/mieru | sed -n 4p | tr -d ',"' | awk '{print $1}')
     if [[ $SYSTEM == "CentOS" ]]; then
-        [[ $(archAffix) == "amd64" ]] && arch="x86_64" || [[ $(archAffix) == "arm64" ]] && arch="aarch64"
+        arch=$(archAffix)
         wget -N https://github.com/enfein/mieru/releases/download/v"$last_version"/mita-"$last_version"-1."$arch".rpm
         rpm -ivh mita-$last_version-1.$arch.rpm
         rm -f mita-$last_version-1.$arch.rpm
     else
-        wget -N https://github.com/enfein/mieru/releases/download/v"$last_version"/mita_"$last_version"_$(archAffix).deb
-        dpkg -i mita_"$last_version"_$(archAffix).deb
-        rm -f mita_"$last_version"_$(archAffix).deb
+        arch=$(archAffix)
+        wget -N https://github.com/enfein/mieru/releases/download/v"$last_version"/mita_"$last_version"_$arch.deb
+        dpkg -i mita_"$last_version"_$arch.deb
+        rm -f mita_"$last_version"_$arch.deb
     fi
 
-    edit_conf()
+    edit_conf
 }
 
 unst_mita(){
@@ -104,7 +104,7 @@ edit_conf(){
     [[ -z $port ]] && port=$(shuf -i 2000-65535 -n 1)
     until [[ -z $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$port") ]]; do
         if [[ -n $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$port") ]]; then
-            echo -e "${RED} $port ${PLAIN} 端口已经被其他程序占用，请更换端口重试！"
+            red "$port 端口已经被其他程序占用，请更换端口重试！"
             read -p "设置 mieru 端口 [1-65535]（回车则随机分配端口）：" port
             [[ -z $port ]] && port=$(shuf -i 2000-65535 -n 1)
         fi
@@ -162,114 +162,58 @@ edit_conf(){
     done
     # 将 MTU 最佳值放置至 MTU 变量中备用
     MTU=$((${MTUy} - 80))
-    green "MTU 最佳值 = $MTU 已设置完毕！"
+    green "MTU 最佳值 = $MTU 已设置完成!"
 
-    cat <<EOF > server_config.json
+    tee /etc/mita/mita_config.json <<-EOF
 {
-    "portBindings": [
-        {
-            "port": $port,
-            "protocol": "$protocol"
-        }
-    ],
+    "port": "${port}",
+    "protocol": "${protocol}",
     "users": [
         {
-            "name": "$user_name",
-            "password": "$auth_pass"
+            "username": "${user_name}",
+            "password": "${auth_pass}"
         }
     ],
-    "loggingLevel": "INFO",
-    "mtu": $MTU
-}
-EOF
-    mita apply config server_config.json
-    rm -f server_config.json
-
-    warpv6=$(curl -s6m5 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
-    warpv4=$(curl -s4m5 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
-    if [[ $warpv4 =~ on|plus || $warpv6 =~ on|plus ]]; then
-        wg-quick down wgcf >/dev/null 2>&1
-        systemctl stop warp-go >/dev/null 2>&1
-        check_ip
-        systemctl start warp-go >/dev/null 2>&1
-        wg-quick up wgcf >/dev/null 2>&1
-    else
-        check_ip
-    fi
-
-    [[ -z $ipv4 ]] && ip=$ipv6 || ip=$ipv4
-
-    rm -rf /root/mieru
-    mkdir /root/mieru >/dev/null 2>&1
-    cat <<EOF > /root/mieru/client_config.json
-{
-    "profiles": [
-        {
-            "profileName": "default",
-            "user": {
-                "name": "$user_name",
-                "password": "$auth_pass"
-            },
-            "servers": [
-                {
-                    "ipAddress": "$ip",
-                    "domainName": "",
-                    "portBindings": [
-                        {
-                            "port": $port,
-                            "protocol": "$protocol"
-                        }
-                    ]
-                }
-            ],
-            "mtu": 1400
+    "system": {
+        "network": {
+            "auto_mtu": ${MTU}
         }
-    ],
-    "activeProfile": "default",
-    "rpcPort": 8964,
-    "socks5Port": 3080,
-    "loggingLevel": "INFO"
+    }
 }
 EOF
 
     mita start
-    result=$(mita status)
-
-    if [[ $result =~ "mita server status is \"RUNNING\"" ]]; then
-        green "mieru 服务安装成功！"
-    else
-        red "mieru 服务启动失败，脚本退出！" && exit 1
-    fi
-    yellow "客户端配置如下，并已保存至 /root/mieru/client_config.json"
-    red "$(cat /root/mieru/client_config.json)\n"
+    green "mieru 配置已完成!"
 }
 
-show_conf(){
-    yellow "客户端配置如下，并已保存至 /root/mieru/client_config.json"
-    red "$(cat /root/mieru/client_config.json)\n"
-}
-
-menu() {
+start_menu(){
     clear
-    echo "基于MisakaNo的脚本做了一些改动而成，支持切换udp"
-    echo -e " ${GREEN}1.${PLAIN} 安装 mieru"
-    echo -e " ${GREEN}2.${PLAIN} ${RED}卸载 mieru${PLAIN}"
-    echo " -------------"
-    echo -e " ${GREEN}3.${PLAIN} 关闭、开启、重启 mieru"
-    echo -e " ${GREEN}4.${PLAIN} 修改 mieru 配置"
-    echo -e " ${GREEN}5.${PLAIN} 显示 mieru 配置文件"
-    echo " -------------"
-    echo -e " ${GREEN}0.${PLAIN} 退出脚本"
-    echo ""
-    read -rp "请输入选项 [0-5]: " menuInput
-    case $menuInput in
-        1 ) inst_mita ;;
-        2 ) unst_mita ;;
-        3 ) mita_switch ;;
-        4 ) edit_conf ;;
-        5 ) show_conf ;;
-        * ) exit 1 ;;
+    green " 1. 安装 mieru"
+    green " 2. 卸载 mieru"
+    green " 3. 启动/关闭/重启 mieru"
+    yellow " 0. 退出"
+    echo
+    read -rp "请输入数字: " num
+    case "$num" in
+        1)
+            inst_mita
+            ;;
+        2)
+            unst_mita
+            ;;
+        3)
+            mita_switch
+            ;;
+        0)
+            exit 0
+            ;;
+        *)
+            clear
+            red "请输入正确的数字"
+            sleep 1s
+            start_menu
+            ;;
     esac
 }
 
-menu
+start_menu
