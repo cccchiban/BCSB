@@ -57,7 +57,7 @@ blocked_domains=(
     "realmebbs.com" "rogbbs.asus.com.cn" "bbs.myzte.cn" "club.huawei.com"
     "bbs.meizu.cn" "xiaohongshu.com" "coolapk.com" "bbsuc.cn" "tangdou.com"
     "oneniceapp.com" "izuiyou.com" "pipigx.com" "ixiaochuan.cn" "duitang.com"
-    "renren.com"
+    "renren.com" "netvi­ga­tor.com" "tor­pro­ject.org" ".esu.wiki" ".gov.cn"
 )
 
 # 定义BT的屏蔽规则
