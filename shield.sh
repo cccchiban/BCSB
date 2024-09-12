@@ -136,30 +136,31 @@ case $choice in
         ;;
 esac
 
-if [ "$action" == "1" ]; then
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [[ "$ID" == "debian" || "$ID" == "ubuntu" ]]; then
-            if ! command -v netfilter-persistent &> /dev/null
-            then
-                echo "netfilter-persistent未安装，正在安装..."
-                sudo apt update && sudo apt install -y netfilter-persistent
-                echo "netfilter-persistent安装完成。"
-            fi
-            sudo sh -c "iptables-save > /etc/iptables/rules.v4"
-            sudo systemctl enable netfilter-persistent
-            sudo systemctl start netfilter-persistent
-        elif [[ "$ID" == "centos" || "$ID" == "rhel" || "$ID" == "fedora" ]]; then
-            sudo service iptables save
-            sudo systemctl restart iptables
-        else
-            echo "请手动保存iptables规则。"
+# 持久化规则
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    if [[ "$ID" == "debian" || "$ID" == "ubuntu" ]]; then
+        if ! command -v netfilter-persistent &> /dev/null
+        then
+            echo "netfilter-persistent未安装，正在安装..."
+            sudo apt update && sudo apt install -y netfilter-persistent
+            echo "netfilter-persistent安装完成。"
         fi
+        sudo sh -c "iptables-save > /etc/iptables/rules.v4"
+        sudo systemctl enable netfilter-persistent
+        sudo systemctl restart netfilter-persistent
+    elif [[ "$ID" == "centos" || "$ID" == "rhel" || "$ID" == "fedora" ]]; then
+        sudo service iptables save
+        sudo systemctl restart iptables
     else
-        echo "无法确定操作系统，请手动保存iptables规则。"
+        echo "请手动保存iptables规则。"
     fi
+else
+    echo "无法确定操作系统，请手动保存iptables规则。"
+fi
 
+if [ "$action" == "1" ]; then
     echo "所有屏蔽规则已成功添加并生效！"
 else
-    echo "所有屏蔽规则已成功删除！"
+    echo "所有屏蔽规则已成功删除并持久化！"
 fi
