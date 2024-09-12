@@ -77,7 +77,17 @@ speedtest_blocked_strings=(
     "speedtest"
 )
 
-echo "请选择要屏蔽的类型："
+echo "请选择操作："
+echo "1) 添加屏蔽规则"
+echo "2) 删除屏蔽规则"
+read -p "输入选项 (1/2): " action
+
+if [ "$action" == "2" ]; then
+    echo "请选择要删除屏蔽规则的类型："
+else
+    echo "请选择要屏蔽的类型："
+fi
+
 echo "1) 屏蔽金融、新闻和轮子等网站"
 echo "2) 屏蔽BT和挖矿相关内容"
 echo "3) 屏蔽测速网站"
@@ -87,22 +97,37 @@ case $choice in
     1)
         for domain in "${blocked_domains[@]}"
         do
-            iptables -A OUTPUT -m string --string "$domain" --algo bm -j DROP
-            echo "Blocked $domain"
+            if [ "$action" == "2" ]; then
+                iptables -D OUTPUT -m string --string "$domain" --algo bm -j DROP
+                echo "Unblocked $domain"
+            else
+                iptables -A OUTPUT -m string --string "$domain" --algo bm -j DROP
+                echo "Blocked $domain"
+            fi
         done
         ;;
     2)
         for string in "${extra_blocked_strings[@]}"
         do
-            iptables -A OUTPUT -m string --string "$string" --algo bm -j DROP
-            echo "Blocked $string"
+            if [ "$action" == "2" ]; then
+                iptables -D OUTPUT -m string --string "$string" --algo bm -j DROP
+                echo "Unblocked $string"
+            else
+                iptables -A OUTPUT -m string --string "$string" --algo bm -j DROP
+                echo "Blocked $string"
+            fi
         done
         ;;
     3)
         for string in "${speedtest_blocked_strings[@]}"
         do
-            iptables -A OUTPUT -m string --string "$string" --algo bm -j DROP
-            echo "Blocked $string"
+            if [ "$action" == "2" ]; then
+                iptables -D OUTPUT -m string --string "$string" --algo bm -j DROP
+                echo "Unblocked $string"
+            else
+                iptables -A OUTPUT -m string --string "$string" --algo bm -j DROP
+                echo "Blocked $string"
+            fi
         done
         ;;
     *)
@@ -111,20 +136,24 @@ case $choice in
         ;;
 esac
 
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    if [[ "$ID" == "debian" || "$ID" == "ubuntu" ]]; then
-        sudo sh -c "iptables-save > /etc/iptables/rules.v4"
-        sudo systemctl enable netfilter-persistent
-        sudo systemctl start netfilter-persistent
-    elif [[ "$ID" == "centos" || "$ID" == "rhel" || "$ID" == "fedora" ]]; then
-        sudo service iptables save
-        sudo systemctl restart iptables
+if [ "$action" == "1" ]; then
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        if [[ "$ID" == "debian" || "$ID" == "ubuntu" ]]; then
+            sudo sh -c "iptables-save > /etc/iptables/rules.v4"
+            sudo systemctl enable netfilter-persistent
+            sudo systemctl start netfilter-persistent
+        elif [[ "$ID" == "centos" || "$ID" == "rhel" || "$ID" == "fedora" ]]; then
+            sudo service iptables save
+            sudo systemctl restart iptables
+        else
+            echo "请手动保存iptables规则。"
+        fi
     else
-        echo "请手动保存iptables规则。"
+        echo "无法确定操作系统，请手动保存iptables规则。"
     fi
-else
-    echo "无法确定操作系统，请手动保存iptables规则。"
-fi
 
-echo "所有屏蔽规则已成功添加并生效！"
+    echo "所有屏蔽规则已成功添加并生效！"
+else
+    echo "所有屏蔽规则已成功删除！"
+fi
