@@ -140,6 +140,12 @@ if [ "$action" == "1" ]; then
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         if [[ "$ID" == "debian" || "$ID" == "ubuntu" ]]; then
+            if ! command -v netfilter-persistent &> /dev/null
+            then
+                echo "netfilter-persistent未安装，正在安装..."
+                sudo apt update && sudo apt install -y netfilter-persistent
+                echo "netfilter-persistent安装完成。"
+            fi
             sudo sh -c "iptables-save > /etc/iptables/rules.v4"
             sudo systemctl enable netfilter-persistent
             sudo systemctl start netfilter-persistent
