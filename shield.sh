@@ -90,6 +90,22 @@ taiwan_banks_domains=(
     "taishinbank.com.tw" "entiebank.com.tw" "ctbcbank.com" "nextbank.com.tw"
     "linebank.com.tw" "rakuten-bank.com.tw"
 )
+
+# 定义 Spam 邮箱域名屏蔽规则
+spam_email_domains=(
+    "guerrillamail.info" "guerrillamail.biz" "guerrillamail.com" "guerrillamail.de" "guerrillamail.net"
+    "guerrillamail.org" "guerrillamail.me" "guerrillamail.la" "guerrillamailblock.info" "guerrillamailblock.biz"
+    "guerrillamailblock.com" "guerrillamailblock.de" "guerrillamailblock.net" "guerrillamailblock.org"
+    "guerrillamailblock.me" "guerrillamailblock.la" "sharklasers.info" "sharklasers.biz" "sharklasers.com"
+    "sharklasers.de" "sharklasers.net" "sharklasers.org" "sharklasers.me" "sharklasers.la" "grr.info" "grr.biz"
+    "grr.com" "grr.de" "grr.net" "grr.org" "grr.me" "grr.la" "pokemail.info" "pokemail.biz" "pokemail.com"
+    "pokemail.de" "pokemail.net" "pokemail.org" "pokemail.me" "pokemail.la" "spam4.info" "spam4.biz" "spam4.com"
+    "spam4.de" "spam4.net" "spam4.org" "spam4.me" "spam4.la" "bccto.info" "bccto.biz" "bccto.com" "bccto.de"
+    "bccto.net" "bccto.org" "bccto.me" "bccto.la" "chacuo.info" "chacuo.biz" "chacuo.com" "chacuo.de" "chacuo.net"
+    "chacuo.org" "chacuo.me" "chacuo.la" "027168.info" "027168.biz" "027168.com" "027168.de" "027168.net"
+    "027168.org" "027168.me" "027168.la"
+)
+
 echo "请选择操作："
 echo "1) 添加屏蔽规则"
 echo "2) 删除屏蔽规则"
@@ -105,7 +121,8 @@ echo "1) 屏蔽金融、新闻和轮子等网站"
 echo "2) 屏蔽BT和挖矿相关内容"
 echo "3) 屏蔽测速网站"
 echo "4) 屏蔽台湾地区银行网站"
-read -p "输入选项 (1/2/3/4): " choice
+echo "5) 屏蔽Spam邮箱域名"
+read -p "输入选项 (1/2/3/4/5): " choice
 
 case $choice in
     1)
@@ -156,6 +173,18 @@ case $choice in
             fi
         done
         ;;
+    5)
+        for domain in "${spam_email_domains[@]}"
+        do
+            if [ "$action" == "2" ]; then
+                iptables -D OUTPUT -m string --string "$domain" --algo bm -j DROP
+                echo "Unblocked $domain"
+            else
+                iptables -A OUTPUT -m string --string "$domain" --algo bm -j DROP
+                echo "Blocked $domain"
+            fi
+        done
+        ;;
     *)
         echo "无效选项"
         exit 1
@@ -166,15 +195,25 @@ esac
 if [ -f /etc/os-release ]; then
     . /etc/os-release
     if [[ "$ID" == "debian" || "$ID" == "ubuntu" ]]; then
+        # 检查并创建 /etc/iptables 目录
+        if [ ! -d /etc/iptables ]; then
+            echo "/etc/iptables 目录不存在，正在创建..."
+            sudo mkdir -p /etc/iptables
+        fi
+
+        # 检查 netfilter-persistent 是否已安装
         if ! command -v netfilter-persistent &> /dev/null
         then
-            echo "netfilter-persistent未安装，正在安装..."
+            echo "netfilter-persistent 未安装，正在安装..."
             sudo apt update && sudo apt install -y netfilter-persistent
-            echo "netfilter-persistent安装完成。"
+            echo "netfilter-persistent 安装完成。"
         fi
+        
+        # 保存规则并启用 netfilter-persistent
         sudo sh -c "iptables-save > /etc/iptables/rules.v4"
         sudo systemctl enable netfilter-persistent
         sudo systemctl restart netfilter-persistent
+
     elif [[ "$ID" == "centos" || "$ID" == "rhel" || "$ID" == "fedora" ]]; then
         sudo service iptables save
         sudo systemctl restart iptables
