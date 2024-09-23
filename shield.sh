@@ -77,6 +77,19 @@ speedtest_blocked_strings=(
     "speedtest"
 )
 
+# 定义台湾银行域名屏蔽规则
+taiwan_banks_domains=(
+    "cbc.gov.tw" "landbank.com.tw" "eximbank.com.tw" "agribank.com.tw"
+    "tbb.com.tw" "bot.com.tw" "tcb-bank.com.tw" "firstbank.com.tw"
+    "hncb.com.tw" "bankchb.com" "scsb.com.tw" "fubon.com" "cathaybk.com.tw"
+    "bok.com.tw" "megabank.com.tw" "citigroup.com" "o-bank.com" "sc.com"
+    "tcbbank.com.tw" "customer.ktb.com.tw" "hsbc.com.tw" "taipeistarbank.com.tw"
+    "hwataibank.com.tw" "skbank.com.tw" "sunnybank.com.tw" "bop.com.tw"
+    "cotabank.com.tw" "ubot.com.tw" "feib.com.tw" "yuantabank.com.tw"
+    "bank.sinopac.com" "esunbank.com.tw" "kgibank.com.tw" "dbs.com.tw"
+    "taishinbank.com.tw" "entiebank.com.tw" "ctbcbank.com" "nextbank.com.tw"
+    "linebank.com.tw" "rakuten-bank.com.tw"
+)
 echo "请选择操作："
 echo "1) 添加屏蔽规则"
 echo "2) 删除屏蔽规则"
@@ -91,7 +104,8 @@ fi
 echo "1) 屏蔽金融、新闻和轮子等网站"
 echo "2) 屏蔽BT和挖矿相关内容"
 echo "3) 屏蔽测速网站"
-read -p "输入选项 (1/2/3): " choice
+echo "4) 屏蔽台湾地区银行网站"
+read -p "输入选项 (1/2/3/4): " choice
 
 case $choice in
     1)
@@ -127,6 +141,18 @@ case $choice in
             else
                 iptables -A OUTPUT -m string --string "$string" --algo bm -j DROP
                 echo "Blocked $string"
+            fi
+        done
+        ;;
+    4)
+        for domain in "${taiwan_banks_domains[@]}"
+        do
+            if [ "$action" == "2" ]; then
+                iptables -D OUTPUT -m string --string "$domain" --algo bm -j DROP
+                echo "Unblocked $domain"
+            else
+                iptables -A OUTPUT -m string --string "$domain" --algo bm -j DROP
+                echo "Blocked $domain"
             fi
         done
         ;;
