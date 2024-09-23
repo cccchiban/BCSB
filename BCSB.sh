@@ -1,13 +1,13 @@
 #!/bin/bash
 
 if [ "$(id -u)" -ne 0; then
-    echo "请以root用户运行此脚本"
+    echo "Please run this script as root."
     exit 1
 fi
 
 install_if_missing() {
-    command -v "$1" >/dev/null 2>&1 || {
-        echo "$1 未安装，正在安装..."
+    if ! type -P "$1" >/dev/null 2>&1; then
+        echo "$1 is not installed, installing..."
         if command -v apt-get >/dev/null 2>&1; then
             apt-get update
             apt-get install -y "$1"
@@ -18,10 +18,10 @@ install_if_missing() {
         elif command -v zypper >/dev/null 2>&1; then
             zypper install -y "$1"
         else
-            echo "不支持的包管理器，请手动安装 $1"
+            echo "Unsupported package manager. Please install $1 manually."
             exit 1
         fi
-    }
+    fi
 }
 
 install_if_missing jq
