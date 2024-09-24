@@ -1112,6 +1112,7 @@ network_speed_test_script() {
     case $speedtest_choice in
         1)
             bash <(curl -sL bash.icu/speedtest)
+	    speedtest    
             ;;
         2)
             bash <(curl -sL res.yserver.ink/taier.sh)
