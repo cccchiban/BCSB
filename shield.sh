@@ -26,7 +26,7 @@ fi
 
 # 定义要屏蔽的网站
 blocked_domains=(
-    "rfa.org" "bbc.com" "theinitium.com" "tibet.net" "jw.org"
+    "rfa.org"  "theinitium.com" "tibet.net" "jw.org"
     "bannedbook.org" "dw.com" "storm.mg" "yam.com" "chinadigitaltimes"
     "ltn.com.tw" "mpweekly.com" "cup.com.hk" "thenewslens.com"
     "inside.com.tw" "everylittled.com" "cool3c.com" "taketla.zaiko.io"
