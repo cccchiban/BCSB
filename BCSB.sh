@@ -1124,8 +1124,7 @@ network_speed_test_script() {
     read -p "请输入你的选择: " speedtest_choice
     case $speedtest_choice in
         1)
-            bash <(curl -sL bash.icu/speedtest)
-	    speedtest    
+            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh)    
             ;;
         2)
             bash <(curl -sL res.yserver.ink/taier.sh)
