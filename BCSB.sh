@@ -56,7 +56,8 @@ network_menu() {
     echo -e "\033[32m13)\033[0m vnStat流量监控"
     echo -e "\033[32m14)\033[0m iftop网络通信监控"
     echo -e "\033[32m15)\033[0m 安装cloud低占用内核"
-    echo -e "\033[32m16)\033[0m 返回主菜单"
+    echo -e "\033[32m16)\033[0m 删除内核优化参数"
+    echo -e "\033[32m17)\033[0m 返回主菜单"
 }
 
 proxy_menu() {
@@ -73,7 +74,8 @@ proxy_menu() {
     echo -e "\033[32m10)\033[0m X-UI弱密码全网扫描"
     echo -e "\033[32m11)\033[0m ss-plugins（支持ss2022+流量混淆）"
     echo -e "\033[32m12)\033[0m 233boy/xray一键脚本"
-    echo -e "\033[32m13)\033[0m 返回主菜单"
+    echo -e "\033[32m13)\033[0m realm&Gost转发脚本"
+    echo -e "\033[32m14)\033[0m 返回主菜单"
 }
 
 vps_test_menu() {
@@ -475,6 +477,21 @@ install_and_remove_old_kernel() {
         esac
     done
 }
+
+clear_kernel_optimizations() {
+    clear
+    echo "正在清空内核优化参数..."
+
+    sudo tee /etc/sysctl.conf > /dev/null <<EOF
+EOF
+
+    sudo sysctl -p
+
+    echo "内核优化参数已清空。"
+    echo "按回车键继续..."
+    read -r
+}
+
 
 xray_management() {
     clear
@@ -1003,13 +1020,42 @@ install_ss_plugins() {
     read -r
 }
 
+realm_gost_Forward() {
+    clear
+    echo "请选择要执行的操作："
+    echo "1) Realm 转发"
+    echo "2) Gost 转发"
+    echo "3) 返回上级菜单"
+    read -p "请输入你的选择 (1-3): " choice
+
+    case $choice in
+        1)
+            clear
+            echo "脚本来自：https://www.nodeseek.com/post-171363-1"
+            wget -N https://raw.githubusercontent.com/qqrrooty/EZrealm/main/realm.sh && chmod +x realm.sh && ./realm.sh
+            ;;
+        2)
+            clear
+            wget --no-check-certificate -O gost.sh https://raw.githubusercontent.com/qqrrooty/EZgost/main/gost.sh && chmod +x gost.sh && ./gost.sh
+            ;;
+        3)
+            return
+            ;;
+        *)
+            echo "无效的选择，请重试。"
+            ;;
+    esac
+
+    echo "操作完成。按回车键返回菜单。"
+    read -r
+}
+
+
 comprehensive_test_script() {
     clear
     echo "选择一个综合测试脚本:"
     echo -e "\033[32m1)\033[0m 融合怪"
     echo -e "\033[32m2)\033[0m NodeBench"
-    echo -e "\033[32m3)\033[0m yabs"
-    echo -e "\033[32m4)\033[0m 使用 gb5 测试 yabs"
     read -p "请输入你的选择: " test_choice
     case $test_choice in
         1)
@@ -1017,12 +1063,6 @@ comprehensive_test_script() {
             ;;
         2)
             bash <(curl -sL https://raw.githubusercontent.com/LloydAsp/NodeBench/main/NodeBench.sh)
-            ;;
-        3)
-            curl -sL yabs.sh | bash
-            ;;
-        4)
-            curl -sL yabs.sh | bash -5
             ;;
         *)
             echo "无效的选择，请重试。"
@@ -1035,11 +1075,27 @@ comprehensive_test_script() {
 performance_test_script() {
     clear
     echo "选择一个性能测试脚本:"
-    echo -e "\033[32m1)\033[0m GB5 专测脚本"
+    echo -e "\033[32m1)\033[0m GB5 完整测试脚本"
+    echo -e "\033[32m2)\033[0m yabs GB6 完整测试脚本"
+    echo -e "\033[32m3)\033[0m GB6 测试脚本-跳过网络磁盘测试"
+    echo -e "\033[32m4)\033[0m GB5 测试脚本-跳过网络磁盘测试"
+    echo -e "\033[32m5)\033[0m 秋水逸冰-bench测试脚本"
     read -p "请输入你的选择: " perf_choice
     case $perf_choice in
         1)
-            bash <(curl -sL bash.icu/gb5)
+            bash <(wget -qO- https://raw.githubusercontent.com/i-abc/GB5/main/gb5-test.sh)
+            ;;
+        2)
+            curl -sL yabs.sh | bash
+            ;;
+        3)
+            curl -sL yabs.sh | bash -s -- -fi
+            ;;
+        4)
+            curl -sL yabs.sh | bash -s -- -fi5
+            ;;
+        5)
+            wget --no-check-certificate https://raw.githubusercontent.com/teddysun/across/master/bench.sh -O bench.sh && bash bench.sh
             ;;
         *)
             echo "无效的选择，请重试。"
@@ -1432,8 +1488,9 @@ while true; do
                     12) install_warp_script ;;
                     13) manage_vnstat ;;
                     14) manage_iftop ;;
-					15) install_and_remove_old_kernel ;;
-                    16) break ;;
+		    15) install_and_remove_old_kernel ;;
+		    16) clear_kernel_optimizations ;;
+                    17) break ;;
                     *) echo "无效的选择，请重试。" ;;
                 esac
             done
@@ -1454,9 +1511,10 @@ while true; do
                     8) install_hy2_script ;;
                     9) install_dns_unlock_script ;;
                     10) port_scan_and_management ;;
-					11) install_ss_plugins ;;
-					12) 233boy_xray ;;
-                    13) break ;;
+		    11) install_ss_plugins ;;
+      12) 233boy_xray ;;
+      13)realm_gost_Forward ;;
+                    14) break ;;
                     *) echo "无效的选择，请重试。" ;;
                 esac
             done
