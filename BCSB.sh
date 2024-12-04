@@ -1209,10 +1209,7 @@ backtrace_test_script() {
         1)
             curl https://raw.githubusercontent.com/ludashi2020/backtrace/main/install.sh -sSf | sh
             ;;
-        2)
-            wget https://raw.githubusercontent.com/vpsxb/testrace/main/testrace.sh -O testrace.sh && bash testrace.sh <<EOF
-backtrace
-EOF
+        2)  bash <(curl -sSf https://raw.githubusercontent.com/vpsxb/testrace/main/testrace.sh) backtrace
             ;;
         *)
             echo "无效的选择，请重试。"
