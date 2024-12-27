@@ -148,16 +148,19 @@ install_and_test_nexttrace() {
             1) 
                 read -p "请输入要测试的 IP 地址: " ip
                 nexttrace -T --psize 1450 $ip -p 80
+                read -p "按回车键继续..."
                 ;;
             2) 
                 read -p "请输入要测试的 IP 地址: " ip
                 nexttrace -T --psize 30 $ip -p 80
+                read -p "按回车键继续..."
                 ;;
             3)
                 break
                 ;;
             *)
                 echo "无效的选择，请重试。"
+                read -p "按回车键继续..."
                 ;;
         esac
     done
