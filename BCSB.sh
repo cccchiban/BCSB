@@ -523,259 +523,24 @@ xray_management() {
 
 install_vless_tls_splithttp_h3() {
     clear
-    apt update
-    apt install -y curl nano socat
-
-    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
-    
-    echo "注释掉 /etc/systemd/system/xray.service 中的 User=nobody 行..."
-    sudo sed -i 's/^User=nobody/#&/' /etc/systemd/system/xray.service
-
-    echo "重新加载 systemd 守护进程..."
-    sudo systemctl daemon-reload
-
-    curl https://get.acme.sh | sh
-    source ~/.bashrc
-
-    read -p "请输入您的电子邮箱: " email
-    ~/.acme.sh/acme.sh --register-account -m $email
-
-    read -p "请输入您的域名: " domain
-    ~/.acme.sh/acme.sh --issue --standalone -d $domain
-
-    mkdir ~/xray_cert
-    ~/.acme.sh/acme.sh --install-cert -d $domain --ecc \
-        --fullchain-file ~/xray_cert/xray.crt \
-        --key-file ~/xray_cert/xray.key
-    chmod +r ~/xray_cert/xray.key
-
-    sed -i 's/User=nobody/# User=nobody/' /etc/systemd/system/xray.service
-
-    cd /usr/local/bin/
-    uuid=$(./xray uuid)
-
-    read -p "请输入path路径（留空以生成随机路径）: " path
-    if [ -z "$path" ];then
-        path=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 16 | head -n 1)
-    fi
-
-    read -p "是否启用CDN？ (y/n): " use_cdn
-    if [[ "$use_cdn" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        alpn='["h2", "http/1.1"]'
-        alpn_param='h3'
-    else
-        alpn='["h3"]'
-        alpn_param='h2,http/1.1'
-    fi
-
-    read -p "请输入端口（如果要套CDN，最好选择443端口）: " port
-
-    cat <<EOF > /usr/local/etc/xray/config.json
-{
-    "inbounds": [
-        {
-            "sniffing": {
-                "enabled": true,
-                "destOverride": [
-                    "http",
-                    "tls",
-                    "quic"
-                ]
-            },
-            "port": $port,
-            "listen": "0.0.0.0",
-            "protocol": "vless",
-            "settings": {
-                "clients": [
-                    {
-                        "id": "$uuid"
-                    }
-                ],
-                "decryption": "none"
-            },
-            "streamSettings": {
-                "network": "splithttp",
-                "security": "tls",
-                "splithttpSettings": {
-                    "path": "/$path",
-                    "host": "$domain"
-                },
-                "tlsSettings": {
-                    "rejectUnknownSni": true,
-                    "minVersion": "1.3",
-                    "alpn": $alpn,
-                    "certificates": [
-                        {
-                            "ocspStapling": 3600,
-                            "certificateFile": "/root/xray_cert/xray.crt",
-                            "keyFile": "/root/xray_cert/xray.key"
-                        }
-                    ]
-                }
-            }
-        }
-    ],
-    "outbounds": [
-        {
-            "tag": "direct",
-            "protocol": "freedom"
-        }
-    ]
-}
-EOF
-
-    systemctl daemon-reload
-    systemctl start xray
-    systemctl enable xray
-
-    share_link="vless://${uuid}@${domain}:${port}?encryption=none&security=tls&sni=${domain}&alpn=${alpn_param}&fp=chrome&type=splithttp&host=${domain}&path=/${path}#Xray"
-
-    echo "分享链接: $share_link"
-    echo "安装 VLESS-TLS-SplitHTTP-H3 完成。按回车键返回菜单。"
+    echo "正在下载并执行 install_vless.sh 脚本..."
+    wget -N https://raw.githubusercontent.com/cccchiban/BCSB/main/install_vless.sh && bash install_vless.sh
+    echo "脚本执行完成。按回车键返回菜单。"
     read -r
 }
 
 install_xtls_rprx_vision_reality() {
     clear
-    echo "安装 xray..."
-    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
-
-    echo "注释掉 /etc/systemd/system/xray.service 中的 User=nobody 行..."
-    sudo sed -i 's/^User=nobody/#&/' /etc/systemd/system/xray.service
-
-    echo "重新加载 systemd 守护进程..."
-    sudo systemctl daemon-reload
-
-    echo "创建 /var/log/xray 目录并设置权限..."
-    sudo mkdir -p /var/log/xray
-    sudo chown -R $(whoami):$(whoami) /var/log/xray
-
-    echo "生成 UUID..."
-    cd /usr/local/bin/
-    uuid=$(./xray uuid)
-
-    echo "生成 x25519 密钥对..."
-    keys=$(./xray x25519)
-    privateKey=$(echo "$keys" | grep 'Private' | awk '{print $3}')
-    publicKey=$(echo "$keys" | grep 'Public' | awk '{print $3}')
-
-    read -rp "请输入端口号（默认10086）: " port
-    port=${port:-10086}
-
-    read -rp "请输入域名（默认as.idolmaster-official.jp）: " domain
-    domain=${domain:-as.idolmaster-official.jp}
-
-    echo "生成 shortIds..."
-    shortIds=$(cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 16 | head -n 1)
-
-    echo "编辑 xray 配置文件..."
-    sudo bash -c "cat << EOF > /usr/local/etc/xray/config.json
-{
-  \"log\": {
-    \"loglevel\": \"warning\",
-    \"access\": \"/var/log/xray/access.log\",
-    \"error\": \"/var/log/xray/error.log\"
-  },
-  \"dns\": {
-    \"servers\": [
-      \"https+local://1.1.1.1/dns-query\",
-      \"localhost\"
-    ]
-  },
-  \"routing\": {
-    \"domainStrategy\": \"IPIfNonMatch\",
-    \"rules\": [
-      {
-        \"type\": \"field\",
-        \"ip\": [
-          \"geoip:private\" 
-        ],
-        \"outboundTag\": \"block\"
-      },
-      {
-        \"type\": \"field\",
-        \"ip\": [\"geoip:cn\"],
-        \"outboundTag\": \"block\"
-      },
-      {
-        \"type\": \"field\",
-        \"domain\": [
-          \"geosite:category-ads-all\" 
-        ],
-        \"outboundTag\": \"block\" 
-      }
-    ]
-  },
-  \"inbounds\": [
-    {
-      \"listen\": \"0.0.0.0\",
-      \"port\": $port,
-      \"protocol\": \"vless\",
-      \"settings\": {
-        \"clients\": [
-          {
-            \"id\": \"$uuid\",
-            \"flow\": \"xtls-rprx-vision\",
-            \"level\": 0,
-            \"email\": \"xray@gmail.com\"
-          }
-        ],
-        \"decryption\": \"none\"
-      },
-      \"streamSettings\": {
-        \"network\": \"tcp\",
-        \"security\": \"reality\",
-        \"realitySettings\": {
-          \"show\": false,
-          \"dest\": \"$domain:443\",
-          \"xver\": 0,
-          \"serverNames\": [\"$domain\"],
-          \"privateKey\": \"$privateKey\",
-          \"publicKey\": \"$publicKey\",
-          \"maxTimeDiff\": 7000,
-          \"shortIds\": [\"\", \"$shortIds\"]
-        }
-      }
-    }
-  ],
-  \"outbounds\": [
-    {
-      \"tag\": \"direct\",
-      \"protocol\": \"freedom\"
-    },
-    {
-      \"tag\": \"block\",
-      \"protocol\": \"blackhole\"
-    }
-  ]
-}
-EOF"
-
-    echo "重新加载 xray 服务配置..."
-    sudo systemctl restart xray
-
-    echo "检查 xray 服务状态..."
-    sudo systemctl status xray
-
-    echo "设置 xray 开机自启..."
-    sudo systemctl enable xray
-
-    ip=$(curl -4 -s ifconfig.me)
-    shareLink="vless://$uuid@$ip:$port?security=reality&sni=$domain&fp=chrome&pbk=$publicKey&sid=$shortIds&type=tcp&flow=xtls-rprx-vision&encryption=none#$ip"
-
-    echo "安装 xtls-rprx-vision-reality 完成。以下是配置信息："
-    echo "UUID: $uuid"
-    echo "PrivateKey: $privateKey"
-    echo "PublicKey: $publicKey"
-    echo "分享链接: $shareLink"
-    echo "按回车键返回菜单。"
+    echo "正在下载并执行 install_xray.sh 脚本..."
+    wget -N https://raw.githubusercontent.com/cccchiban/BCSB/main/install_xray.sh && bash install_xray.sh
+    echo "脚本执行完成。按回车键返回菜单。"
     read -r
 }
 
 install_mieru_script() {
     clear
     echo "运行Mieru安装脚本..."
-    wget -N --no-check-certificate https://raw.githubusercontent.com/cccchiban/BCSB/main/mieru.sh && bash mieru.sh
+    wget -N https://raw.githubusercontent.com/cccchiban/BCSB/main/mieru.sh && bash mieru.sh
     echo "运行完成。按回车键返回菜单。"
     read -r
 }
@@ -791,7 +556,7 @@ install_v2bx_script() {
 install_v2ray-agent_script() {
     clear
     echo "运行v2ray-agent八合一键脚本..."
-    wget -P /root -N --no-check-certificate "https://raw.githubusercontent.com/mack-a/v2ray-agent/master/install.sh" && chmod 700 /root/install.sh && /root/install.sh
+    wget -P /root -N "https://raw.githubusercontent.com/mack-a/v2ray-agent/master/install.sh" && chmod 700 /root/install.sh && /root/install.sh
     echo "安装完成。按回车键返回菜单。"
     read -r
 }
@@ -1083,6 +848,7 @@ performance_test_script() {
     echo -e "\033[32m3)\033[0m GB6 测试脚本-跳过网络磁盘测试"
     echo -e "\033[32m4)\033[0m GB5 测试脚本-跳过网络磁盘测试"
     echo -e "\033[32m5)\033[0m 秋水逸冰-bench测试脚本"
+    echo -e "\033[32m6)\033[0m NodeQuality测试脚本"
     read -p "请输入你的选择: " perf_choice
     case $perf_choice in
         1)
@@ -1100,6 +866,9 @@ performance_test_script() {
         5)
             wget --no-check-certificate https://raw.githubusercontent.com/teddysun/across/master/bench.sh -O bench.sh && bash bench.sh
             ;;
+        6)
+            bash <(curl -sL https://run.NodeQuality.com)
+            ;;
         *)
             echo "无效的选择，请重试。"
             ;;
@@ -1112,9 +881,9 @@ media_ip_quality_test_script() {
     clear
     echo "选择一个流媒体及 IP 质量测试脚本:"
     echo -e "\033[32m1)\033[0m media测试脚本"
-    echo -e "\033[32m2)\033[0m check原生检测脚本"
-    echo -e "\033[32m3)\033[0m Check准确度最高"
-    echo -e "\033[32m4)\033[0m IP 质量体检脚本"
+    echo -e "\033[32m2)\033[0m check检测脚本1"
+    echo -e "\033[32m3)\033[0m Check检测脚本2"
+    echo -e "\033[32m4)\033[0m Check IP 质量体检脚本"
     echo -e "\033[32m5)\033[0m ChatGPT 解锁检测"
     read -p "请输入你的选择: " media_choice
     case $media_choice in
