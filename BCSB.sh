@@ -57,7 +57,8 @@ network_menu() {
     echo -e "\033[32m14)\033[0m iftop网络通信监控"
     echo -e "\033[32m15)\033[0m 安装cloud低占用内核"
     echo -e "\033[32m16)\033[0m 删除内核优化参数"
-    echo -e "\033[32m17)\033[0m 返回主菜单"
+    echo -e "\033[32m17)\033[0m TCP调优"
+    echo -e "\033[32m18)\033[0m 返回主菜单"
 }
 
 proxy_menu() {
@@ -75,7 +76,16 @@ proxy_menu() {
     echo -e "\033[32m11)\033[0m ss-plugins（支持ss2022+流量混淆）"
     echo -e "\033[32m12)\033[0m 233boy/xray一键脚本"
     echo -e "\033[32m13)\033[0m realm&Gost转发脚本"
-    echo -e "\033[32m14)\033[0m 返回主菜单"
+    echo -e "\033[32m14)\033[0m 安装哆啦A梦转发面板"
+    echo -e "\033[32m15)\033[0m 返回主菜单"
+}
+
+forward_panel() {
+    clear
+    echo "安装哆啦A梦转发面板..."
+    curl -L https://raw.githubusercontent.com/bqlpfy/forward-panel/refs/heads/main/panel_install.sh -o panel_install.sh && chmod +x panel_install.sh && ./panel_install.sh
+    echo "安装完成。按回车键返回菜单。"
+    read -r
 }
 
 vps_test_menu() {
@@ -86,6 +96,14 @@ vps_test_menu() {
     echo -e "\033[32m4)\033[0m 三网测速脚本"
     echo -e "\033[32m5)\033[0m 回程测试"
     echo -e "\033[32m6)\033[0m 返回主菜单"
+}
+
+TCP_Optimization_Tool() {
+    clear
+    echo "正在下载并执行 TCP 优化脚本..."
+    wget -q https://raw.githubusercontent.com/BlackSheep-cry/TCP-Optimization-Tool/main/tool.sh -O tool.sh && chmod +x tool.sh && ./tool.sh
+    echo "脚本执行完成。按回车键返回菜单。"
+    read -r
 }
 
 kernel_optimization() {
@@ -1255,9 +1273,10 @@ while true; do
                     14) manage_iftop ;;
 		    15) install_and_remove_old_kernel ;;
 		    16) clear_kernel_optimizations ;;
-                    17) break ;;
-                    *) echo "无效的选择，请重试。" ;;
-                esac
+		                  17) TCP_Optimization_Tool ;;
+		                  18) break ;;
+		                  *) echo "无效的选择，请重试。" ;;
+		              esac
             done
             ;;
         2) 
@@ -1279,7 +1298,8 @@ while true; do
 		    11) install_ss_plugins ;;
       12) 233boy_xray ;;
       13)realm_gost_Forward ;;
-                    14) break ;;
+      14) forward_panel ;;
+                    15) break ;;
                     *) echo "无效的选择，请重试。" ;;
                 esac
             done
