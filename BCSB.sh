@@ -48,7 +48,9 @@ create_alias() {
         # If the alias does not exist, add it to the .bashrc file
         echo "$alias_command" >> "$bashrc_file"
         echo "别名 'bcsb' 已经添加到 $bashrc_file。"
-        echo "请运行 'source $bashrc_file' 或重启您的终端来使别名生效。"
+        source "$bashrc_file"
+        echo "别名已自动生效。脚本将在1秒后继续..."
+        sleep 1
     fi
 }
 
@@ -56,11 +58,12 @@ create_alias() {
 create_alias
 
 show_menu() {
-    echo -e "\033[32m=================================================\033[0m"
-    echo -e "\033[32mBCSB一键脚本\033[0m"
-    echo -e "\033[32m项目地址: https://github.com/cccchiban/BCSB\033[0m"
-    echo -e "\033[32m更新时间：2025/8/20\033[0m"
-    echo -e "\033[32m=================================================\033[0m"
+    echo -e "\033[34m=================================================\033[0m"
+    echo -e "\033[34mBCSB一键脚本\033[0m"
+    echo -e "\033[34m项目地址: https://github.com/cccchiban/BCSB\033[0m"
+    echo -e "\033[34m更新时间：2025/8/20\033[0m"
+    echo -e "\033[34m再次运行可输入'bcsb'后回车\033[0m"
+    echo -e "\033[34m=================================================\033[0m"
     echo
     echo -e "\033[32m请选择一个操作:\033[0m"
     echo -e "\033[32m1)\033[0m 网络/性能"
@@ -125,9 +128,25 @@ vps_test_menu() {
     echo -e "\033[32m1)\033[0m 综合测试脚本"
     echo -e "\033[32m2)\033[0m 性能测试"
     echo -e "\033[32m3)\033[0m 流媒体及 IP 质量测试"
-    echo -e "\033[32m4)\033[0m 三网测速脚本"
-    echo -e "\033[32m5)\033[0m 回程测试"
-    echo -e "\033[32m6)\033[0m 返回主菜单"
+    echo -e "\033[32m4)\033[0m 网络测试"
+    echo -e "\033[32m5)\033[0m 返回主菜单"
+}
+
+network_test_submenu() {
+    clear
+    echo "选择一个网络测试脚本:"
+    echo -e "\033[32m1)\033[0m 三网测速脚本"
+    echo -e "\033[32m2)\033[0m 回程测试脚本"
+    echo -e "\033[32m3)\033[0m 网络质量体检"
+    echo -e "\033[32m4)\033[0m 返回上一级"
+    read -p "请输入你的选择: " network_test_choice
+    case $network_test_choice in
+        1) network_speed_test_script ;;
+        2) backtrace_test_script ;;
+        3) bash <(curl -sL Net.Check.Place) ;;
+        4) return ;;
+        *) echo "无效的选择，请重试。" ;;
+    esac
 }
 
 TCP_Optimization_Tool() {
@@ -1096,21 +1115,16 @@ function_script() {
                 wget -O box.sh https://raw.githubusercontent.com/BlueSkyXN/SKY-BOX/main/box.sh && chmod +x box.sh && clear && ./box.sh
                 ;;
             6)
-                echo -e "\033[31m注意：本脚本未经实际测试能否正常运行，请谨慎使用，如遇报错欢迎反馈\033[0m"
-                echo -e "\033[32m1)\033[0m 备份Docker"
-                echo -e "\033[32m2)\033[0m 恢复Docker"
-                read -p "请输入你的选择: " docker_choice
-                case $docker_choice in
-                    1)
-                        curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/bf.sh  && chmod +x bf.sh && ./bf.sh
-                        ;;
-                    2)
-                        curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/hf.sh && chmod +x hf.sh && ./hf.sh
-                        ;;
-                    *)
-                        echo "无效的选择，请重试。"
-                        ;;
-                esac
+                echo "脚本项目地址：https://github.com/ceocok/Docker_container_migration/tree/main"
+                echo "备份过程中 源服务器会临时占用 Nginx 端口 8889，请勿中断脚本。"
+                sleep 1
+                if [ -f "Docker_container_migration.sh" ]; then
+                    ./Docker_container_migration.sh
+                else
+                    curl -O https://raw.githubusercontent.com/ceocok/Docker_container_migration/refs/heads/main/Docker_container_migration.sh
+                    chmod +x Docker_container_migration.sh
+                    ./Docker_container_migration.sh
+                fi
                 ;;
             7)
                 echo -e "\033[32m1)\033[0m 安装并启动btop"
@@ -1349,9 +1363,8 @@ while true; do
                     1) comprehensive_test_script ;;
                     2) performance_test_script ;;
                     3) media_ip_quality_test_script ;;
-                    4) network_speed_test_script ;;
-                    5) backtrace_test_script ;;
-                    6) break ;;
+                    4) network_test_submenu ;;
+                    5) break ;;
                     *) echo "无效的选择，请重试。" ;;
                 esac
             done
