@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "$(id -u)" -ne 0; then
+if [[ "$(id -u)" -ne 0 ]]; then
     echo "Please run this script as root."
     exit 1
 fi
@@ -48,8 +48,7 @@ create_alias() {
         # If the alias does not exist, add it to the .bashrc file
         echo "$alias_command" >> "$bashrc_file"
         echo "别名 'bcsb' 已经添加到 $bashrc_file。"
-        source "$bashrc_file"
-        echo "别名已自动生效。脚本将在1秒后继续..."
+        echo "请重新启动终端来使别名生效。"
         sleep 1
     fi
 }
