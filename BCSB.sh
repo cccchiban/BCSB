@@ -29,7 +29,39 @@ install_if_missing sudo
 install_if_missing curl
 install_if_missing wget
 
+# Function to create a permanent alias for the script
+create_alias() {
+    # Define the alias command, using the full path to the script
+    alias_command="alias bcsb='$(realpath "$0")'"
+    
+    # Define the path to the bashrc file
+    bashrc_file="/root/.bashrc"
+    
+    # Check if the .bashrc file exists, create it if it doesn't
+    if [ ! -f "$bashrc_file" ]; then
+        touch "$bashrc_file"
+        echo "Created $bashrc_file"
+    fi
+    
+    # Check if the alias already exists in the .bashrc file
+    if ! grep -qF "alias bcsb=" "$bashrc_file"; then
+        # If the alias does not exist, add it to the .bashrc file
+        echo "$alias_command" >> "$bashrc_file"
+        echo "别名 'bcsb' 已经添加到 $bashrc_file。"
+        echo "请运行 'source $bashrc_file' 或重启您的终端来使别名生效。"
+    fi
+}
+
+# Create the alias for easy execution, then clear the screen for the menu
+create_alias
+
 show_menu() {
+    echo -e "\033[32m=================================================\033[0m"
+    echo -e "\033[32mBCSB一键脚本\033[0m"
+    echo -e "\033[32m项目地址: https://github.com/cccchiban/BCSB\033[0m"
+    echo -e "\033[32m更新时间：2025/8/20\033[0m"
+    echo -e "\033[32m=================================================\033[0m"
+    echo
     echo -e "\033[32m请选择一个操作:\033[0m"
     echo -e "\033[32m1)\033[0m 网络/性能"
     echo -e "\033[32m2)\033[0m 代理"
@@ -1135,9 +1167,10 @@ install_common_env_software() {
         echo -e "\033[32m8)\033[0m 耗子面板"
         echo -e "\033[32m9)\033[0m 哪吒监控"
 	echo -e "\033[32m10)\033[0m MCSManager MC开服面板"
-        echo -e "\033[32m11)\033[0m 返回主菜单"
-        read -p "请输入你的选择: " install_choice
-        case $install_choice in
+	echo -e "\033[32m11)\033[0m Komari 探针"
+	       echo -e "\033[32m12)\033[0m 返回主菜单"
+	       read -p "请输入你的选择: " install_choice
+	       case $install_choice in
             1)
                 echo "选择 docker 安装版本:"
                 echo "1) 国外专用"
@@ -1235,6 +1268,9 @@ install_common_env_software() {
                 esac
                 ;;
             11)
+                curl -sS -O https://raw.githubusercontent.com/cccchiban/BCSB/main/install_komari.sh && chmod +x install_komari.sh && ./install_komari.sh
+                ;;
+            12)
                 break
                 ;;
             *)
