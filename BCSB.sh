@@ -53,7 +53,6 @@ create_alias() {
     fi
 }
 
-# Create the alias for easy execution, then clear the screen for the menu
 create_alias
 
 show_menu() {
@@ -65,12 +64,864 @@ show_menu() {
     echo -e "\033[34m=================================================\033[0m"
     echo
     echo -e "\033[32m请选择一个操作:\033[0m"
-    echo -e "\033[32m1)\033[0m 网络/性能"
-    echo -e "\033[32m2)\033[0m 代理"
-    echo -e "\033[32m3)\033[0m VPS测试"
-    echo -e "\033[32m4)\033[0m 其他功能"
-    echo -e "\033[32m5)\033[0m 安装常用环境及软件"
-    echo -e "\033[32m6)\033[0m 退出"
+    echo -e "\033[32m1)\033[0m 快捷操作"
+    echo -e "\033[32m2)\033[0m 网络/性能"
+    echo -e "\033[32m3)\033[0m 代理"
+    echo -e "\033[32m4)\033[0m VPS测试"
+    echo -e "\033[32m5)\033[0m 其他功能"
+    echo -e "\033[32m6)\033[0m 安装常用环境及软件"
+    echo -e "\033[32m7)\033[0m 退出"
+}
+
+quick_actions_menu() {
+    echo -e "\033[32m快捷操作选项:\033[0m"
+    echo -e "\033[32m1)\033[0m 批量删除文件"
+    echo -e "\033[32m2)\033[0m 批量重命名/移动文件"
+    echo -e "\033[32m3)\033[0m 批量杀进程"
+    echo -e "\033[32m4)\033[0m 重启"
+    echo -e "\033[32m5)\033[0m 查看内核版本"
+    echo -e "\033[32m6)\033[0m 禁用/启用ICMP"
+    echo -e "\033[32m7)\033[0m 系统更新"
+    echo -e "\033[32m8)\033[0m DNS管理"
+    echo -e "\033[32m9)\033[0m 文件锁定"
+    echo -e "\033[32m10)\033[0m 时区设置"
+    echo -e "\033[32m11)\033[0m 文件搜索"
+    echo -e "\033[32m12)\033[0m 清理无用包"
+    echo -e "\033[32m13)\033[0m 返回主菜单"
+}
+
+batch_delete_files() {
+    clear
+    echo "批量删除文件"
+    echo "================"
+    
+    read -p "请输入要删除的文件目录路径: " target_dir
+    if [[ ! -d "$target_dir" ]]; then
+        echo "错误：目录不存在！"
+        read -p "按回车键返回..."
+        return
+    fi
+    
+    read -p "请输入要删除的文件类型（如 *.log, *.tmp 等，留空删除所有文件）: " file_pattern
+    if [[ -z "$file_pattern" ]]; then
+        file_pattern="*"
+    fi
+    
+    echo "即将删除 $target_dir 目录下所有匹配 $file_pattern 的文件"
+    echo "当前目录中的文件："
+    find "$target_dir" -name "$file_pattern" -type f | head -20
+    
+    read -p "确认删除吗？(y/N): " confirm
+    if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+        count=$(find "$target_dir" -name "$file_pattern" -type f | wc -l)
+        find "$target_dir" -name "$file_pattern" -type f -delete
+        echo "已删除 $count 个文件"
+    else
+        echo "取消删除操作"
+    fi
+    
+    read -p "按回车键返回..."
+}
+
+batch_rename_move_files() {
+    clear
+    echo "批量重命名/移动文件"
+    echo "===================="
+    
+    echo "1) 批量重命名文件"
+    echo "2) 批量移动文件"
+    read -p "请选择操作 (1-2): " operation
+    
+    case $operation in
+        1)
+            read -p "请输入文件目录路径: " target_dir
+            if [[ ! -d "$target_dir" ]]; then
+                echo "错误：目录不存在！"
+                read -p "按回车键返回..."
+                return
+            fi
+            
+            read -p "请输入要重命名的文件类型（如 *.txt, *.jpg 等）: " file_pattern
+            read -p "请输入替换前缀（可选）: " old_prefix
+            read -p "请输入新前缀: " new_prefix
+            
+            if [[ -z "$file_pattern" ]]; then
+                echo "错误：请输入文件类型"
+                read -p "按回车键返回..."
+                return
+            fi
+            
+            count=0
+            for file in "$target_dir"/$file_pattern; do
+                if [[ -f "$file" ]]; then
+                    filename=$(basename "$file")
+                    if [[ -n "$old_prefix" ]]; then
+                        new_filename="${filename/$old_prefix/$new_prefix}"
+                    else
+                        new_filename="${new_prefix}${filename}"
+                    fi
+                    mv "$file" "$target_dir/$new_filename"
+                    echo "重命名: $filename -> $new_filename"
+                    ((count++))
+                fi
+            done
+            echo "已重命名 $count 个文件"
+            ;;
+        2)
+            read -p "请输入源目录路径: " source_dir
+            if [[ ! -d "$source_dir" ]]; then
+                echo "错误：源目录不存在！"
+                read -p "按回车键返回..."
+                return
+            fi
+            
+            read -p "请输入目标目录路径: " target_dir
+            if [[ ! -d "$target_dir" ]]; then
+                echo "目标目录不存在，正在创建..."
+                mkdir -p "$target_dir"
+            fi
+            
+            read -p "请输入要移动的文件类型（如 *.txt, *.jpg 等，留空移动所有文件）: " file_pattern
+            if [[ -z "$file_pattern" ]]; then
+                file_pattern="*"
+            fi
+            
+            count=0
+            for file in "$source_dir"/$file_pattern; do
+                if [[ -f "$file" ]]; then
+                    mv "$file" "$target_dir/"
+                    echo "移动: $(basename "$file") -> $target_dir/"
+                    ((count++))
+                fi
+            done
+            echo "已移动 $count 个文件"
+            ;;
+        *)
+            echo "无效的选择"
+            ;;
+    esac
+    
+    read -p "按回车键返回..."
+}
+
+batch_kill_processes() {
+    clear
+    echo "批量杀进程"
+    echo "==========="
+    
+    echo "1) 按进程名杀进程"
+    echo "2) 按端口号杀进程"
+    echo "3) 查看当前进程列表"
+    read -p "请选择操作 (1-3): " operation
+    
+    case $operation in
+        1)
+            read -p "请输入进程名称（如 nginx, mysql, apache2 等）: " process_name
+            if [[ -z "$process_name" ]]; then
+                echo "错误：请输入进程名称"
+                read -p "按回车键返回..."
+                return
+            fi
+            
+            echo "正在查找进程 $process_name..."
+            pids=$(pgrep -f "$process_name")
+            if [[ -z "$pids" ]]; then
+                echo "未找到进程 $process_name"
+            else
+                echo "找到以下进程："
+                ps aux | grep -E "$process_name" | grep -v grep
+                read -p "确认杀死这些进程吗？(y/N): " confirm
+                if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+                    pkill -f "$process_name"
+                    echo "已杀死进程 $process_name"
+                else
+                    echo "取消操作"
+                fi
+            fi
+            ;;
+        2)
+            read -p "请输入端口号: " port_num
+            if [[ -z "$port_num" || ! "$port_num" =~ ^[0-9]+$ ]]; then
+                echo "错误：请输入有效的端口号"
+                read -p "按回车键返回..."
+                return
+            fi
+            
+            echo "正在查找占用端口 $port_num 的进程..."
+            pids=$(lsof -ti:$port_num 2>/dev/null)
+            if [[ -z "$pids" ]]; then
+                echo "端口 $port_num 未被占用"
+            else
+                echo "占用端口 $port_num 的进程："
+                lsof -i:$port_num
+                read -p "确认杀死这些进程吗？(y/N): " confirm
+                if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+                    kill -9 $pids 2>/dev/null
+                    echo "已杀死占用端口 $port_num 的进程"
+                else
+                    echo "取消操作"
+                fi
+            fi
+            ;;
+        3)
+            echo "当前进程列表（前20个）："
+            ps aux --sort=-%cpu | head -20
+            ;;
+        *)
+            echo "无效的选择"
+            ;;
+    esac
+    
+    read -p "按回车键返回..."
+}
+
+system_reboot() {
+    clear
+    echo "系统重启"
+    echo "========"
+    
+    echo "警告：重启将中断所有正在运行的程序和服务"
+    read -p "确认重启系统吗？(y/N): " confirm
+    
+    if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+        echo "系统将在3秒后重启..."
+        sleep 3
+        reboot
+    else
+        echo "取消重启操作"
+        read -p "按回车键返回..."
+    fi
+}
+
+show_kernel_version() {
+    clear
+    echo "内核版本信息"
+    echo "============"
+    
+    echo "当前内核版本："
+    uname -a
+    
+    echo ""
+    echo "系统信息："
+    cat /etc/os-release 2>/dev/null || echo "无法获取系统信息"
+    
+    echo ""
+    echo "已安装的内核："
+    if command -v dpkg >/dev/null 2>&1; then
+        dpkg -l | grep linux-image | grep -v "^rc" | awk '{print $2 " " $3}'
+    elif command -v rpm >/dev/null 2>&1; then
+        rpm -qa | grep kernel
+    else
+        echo "无法获取内核信息"
+    fi
+    
+    read -p "按回车键返回..."
+}
+
+quick_manage_icmp() {
+    clear
+    echo "ICMP 管理快捷操作"
+    echo "================="
+    
+    echo "当前 ICMP 状态："
+    if sysctl net.ipv4.icmp_echo_ignore_all | grep -q "1"; then
+        echo "ICMP 已禁用"
+    else
+        echo "ICMP 已启用"
+    fi
+    
+    echo ""
+    echo "1) 禁用 ICMP"
+    echo "2) 启用 ICMP"
+    echo "3) 返回上级菜单"
+    read -p "请选择操作 (1-3): " icmp_choice
+    
+    case $icmp_choice in
+        1)
+            sudo sysctl -w net.ipv4.icmp_echo_ignore_all=1
+            sudo sed -i '/net.ipv4.icmp_echo_ignore_all/d' /etc/sysctl.conf
+            echo "net.ipv4.icmp_echo_ignore_all=1" | sudo tee -a /etc/sysctl.conf
+            echo "ICMP 已禁用"
+            ;;
+        2)
+            sudo sysctl -w net.ipv4.icmp_echo_ignore_all=0
+            sudo sed -i '/net.ipv4.icmp_echo_ignore_all/d' /etc/sysctl.conf
+            echo "net.ipv4.icmp_echo_ignore_all=0" | sudo tee -a /etc/sysctl.conf
+            echo "ICMP 已启用"
+            ;;
+        3)
+            return
+            ;;
+        *)
+            echo "无效的选择"
+            ;;
+    esac
+    
+    read -p "按回车键返回..."
+}
+
+system_update() {
+    clear
+    echo "系统更新"
+    echo "========"
+    
+    echo "当前系统信息："
+    cat /etc/os-release 2>/dev/null | grep "PRETTY_NAME" | cut -d'"' -f2
+    
+    echo ""
+    echo "可更新的软件包："
+    if command -v apt >/dev/null 2>&1; then
+        apt list --upgradable 2>/dev/null | wc -l
+        echo "个软件包可以更新"
+    elif command -v yum >/dev/null 2>&1; then
+        yum check-update | wc -l
+        echo "个软件包可以更新"
+    elif command -v dnf >/dev/null 2>&1; then
+        dnf check-update | wc -l
+        echo "个软件包可以更新"
+    else
+        echo "无法检测包管理器"
+        read -p "按回车键返回..."
+        return
+    fi
+    
+    echo ""
+    read -p "确认更新系统吗？这将需要一些时间。(y/N): " confirm
+    
+    if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+        echo "开始更新系统..."
+        if command -v apt >/dev/null 2>&1; then
+            apt update && apt upgrade -y
+        elif command -v yum >/dev/null 2>&1; then
+            yum update -y
+        elif command -v dnf >/dev/null 2>&1; then
+            dnf update -y
+        fi
+        
+        if [[ $? -eq 0 ]]; then
+            echo "系统更新完成！"
+        else
+            echo "更新过程中出现错误"
+        fi
+    else
+        echo "取消更新操作"
+    fi
+    
+    read -p "按回车键返回..."
+}
+
+dns_management() {
+    clear
+    echo "DNS管理"
+    echo "======="
+    
+    echo "当前DNS配置："
+    if [[ -f /etc/resolv.conf ]]; then
+        cat /etc/resolv.conf
+    else
+        echo "无法找到DNS配置文件"
+    fi
+    
+    echo ""
+    echo "1) 编辑DNS配置"
+    echo "2) 恢复默认DNS"
+    echo "3) 使用常用DNS服务器"
+    echo "4) 返回上级菜单"
+    read -p "请选择操作 (1-4): " dns_choice
+    
+    case $dns_choice in
+        1)
+            echo "当前DNS配置："
+            cat /etc/resolv.conf 2>/dev/null || echo "文件不存在"
+            echo ""
+            read -p "请输入新的DNS服务器（多个用空格分隔，如：8.8.8.8 8.8.4.4）: " new_dns
+            if [[ -n "$new_dns" ]]; then
+                cp /etc/resolv.conf /etc/resolv.conf.backup 2>/dev/null
+                > /etc/resolv.conf
+                for dns in $new_dns; do
+                    echo "nameserver $dns" >> /etc/resolv.conf
+                done
+                echo "DNS配置已更新"
+                echo "新的DNS配置："
+                cat /etc/resolv.conf
+            else
+                echo "DNS服务器不能为空"
+            fi
+            ;;
+        2)
+            if [[ -f /etc/resolv.conf.backup ]]; then
+                cp /etc/resolv.conf.backup /etc/resolv.conf
+                echo "已恢复默认DNS配置"
+            else
+                echo "无法找到备份文件，正在恢复系统默认..."
+                > /etc/resolv.conf
+                echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+                echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+                echo "已恢复为Google DNS"
+            fi
+            ;;
+        3)
+            echo "选择常用DNS服务器："
+            echo "1) Google DNS (8.8.8.8, 8.8.4.4)"
+            echo "2) Cloudflare DNS (1.1.1.1, 1.0.0.1)"
+            echo "3) OpenDNS (208.67.222.222, 208.67.220.220)"
+            echo "4) 阿里DNS (223.5.5.5, 223.6.6.6)"
+            read -p "请选择 (1-4): " dns_preset
+            
+            case $dns_preset in
+                1)
+                    cp /etc/resolv.conf /etc/resolv.conf.backup 2>/dev/null
+                    > /etc/resolv.conf
+                    echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+                    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+                    echo "已设置为Google DNS"
+                    ;;
+                2)
+                    cp /etc/resolv.conf /etc/resolv.conf.backup 2>/dev/null
+                    > /etc/resolv.conf
+                    echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+                    echo "nameserver 1.0.0.1" >> /etc/resolv.conf
+                    echo "已设置为Cloudflare DNS"
+                    ;;
+                3)
+                    cp /etc/resolv.conf /etc/resolv.conf.backup 2>/dev/null
+                    > /etc/resolv.conf
+                    echo "nameserver 208.67.222.222" >> /etc/resolv.conf
+                    echo "nameserver 208.67.220.220" >> /etc/resolv.conf
+                    echo "已设置为OpenDNS"
+                    ;;
+                4)
+                    cp /etc/resolv.conf /etc/resolv.conf.backup 2>/dev/null
+                    > /etc/resolv.conf
+                    echo "nameserver 223.5.5.5" >> /etc/resolv.conf
+                    echo "nameserver 223.6.6.6" >> /etc/resolv.conf
+                    echo "已设置为阿里DNS"
+                    ;;
+                *)
+                    echo "无效的选择"
+                    ;;
+            esac
+            ;;
+        4)
+            return
+            ;;
+        *)
+            echo "无效的选择"
+            ;;
+    esac
+    
+    read -p "按回车键返回..."
+}
+
+file_lock_management() {
+    clear
+    echo "文件锁定管理"
+    echo "==========="
+    
+    echo "1) 锁定文件"
+    echo "2) 解锁文件"
+    echo "3) 查看文件锁定状态"
+    echo "4) 返回上级菜单"
+    read -p "请选择操作 (1-4): " lock_choice
+    
+    case $lock_choice in
+        1)
+            read -p "请输入要锁定的文件路径: " file_path
+            if [[ -z "$file_path" ]]; then
+                echo "文件路径不能为空"
+            elif [[ ! -e "$file_path" ]]; then
+                echo "文件不存在：$file_path"
+            else
+                chattr +i "$file_path" 2>/dev/null
+                if [[ $? -eq 0 ]]; then
+                    echo "文件已锁定：$file_path"
+                else
+                    echo "锁定失败，请检查权限或文件系统支持"
+                fi
+            fi
+            ;;
+        2)
+            read -p "请输入要解锁的文件路径: " file_path
+            if [[ -z "$file_path" ]]; then
+                echo "文件路径不能为空"
+            elif [[ ! -e "$file_path" ]]; then
+                echo "文件不存在：$file_path"
+            else
+                chattr -i "$file_path" 2>/dev/null
+                if [[ $? -eq 0 ]]; then
+                    echo "文件已解锁：$file_path"
+                else
+                    echo "解锁失败，请检查权限"
+                fi
+            fi
+            ;;
+        3)
+            read -p "请输入要检查的文件路径（留空检查当前目录）: " file_path
+            if [[ -z "$file_path" ]]; then
+                file_path="."
+            fi
+            
+            echo "检查文件锁定状态："
+            if [[ -f "$file_path" ]]; then
+                lsattr "$file_path" 2>/dev/null || echo "无法获取文件属性"
+            elif [[ -d "$file_path" ]]; then
+                echo "目录中锁定状态的文件："
+                find "$file_path" -type f -exec lsattr {} + 2>/dev/null | grep "i" || echo "未找到锁定的文件"
+            else
+                echo "路径不存在：$file_path"
+            fi
+            ;;
+        4)
+            return
+            ;;
+        *)
+            echo "无效的选择"
+            ;;
+    esac
+    
+    read -p "按回车键返回..."
+}
+
+timezone_management() {
+    clear
+    echo "时区设置"
+    echo "======="
+    
+    echo "当前时区："
+    timedatectl status 2>/dev/null | grep "Time zone" || echo "无法获取时区信息"
+    
+    echo ""
+    echo "1) 设置时区"
+    echo "2) 列出所有可用时区"
+    echo "3) 同步系统时间"
+    echo "4) 返回上级菜单"
+    read -p "请选择操作 (1-4): " timezone_choice
+    
+    case $timezone_choice in
+        1)
+            echo "常用时区："
+            echo "1) Asia/Shanghai (中国标准时间)"
+            echo "2) Asia/Tokyo (日本标准时间)"
+            echo "3) Asia/Seoul (韩国标准时间)"
+            echo "4) America/New_York (美国东部时间)"
+            echo "5) Europe/London (英国时间)"
+            echo "6) 自定义时区"
+            read -p "请选择时区 (1-6): " tz_preset
+            
+            case $tz_preset in
+                1) timezone="Asia/Shanghai" ;;
+                2) timezone="Asia/Tokyo" ;;
+                3) timezone="Asia/Seoul" ;;
+                4) timezone="America/New_York" ;;
+                5) timezone="Europe/London" ;;
+                6) 
+                    read -p "请输入时区（如：Asia/Shanghai）: " timezone
+                    ;;
+                *)
+                    echo "无效的选择"
+                    read -p "按回车键返回..."
+                    return
+                    ;;
+            esac
+            
+            if [[ -n "$timezone" ]]; then
+                timedatectl set-timezone "$timezone" 2>/dev/null
+                if [[ $? -eq 0 ]]; then
+                    echo "时区已设置为：$timezone"
+                    echo "新的时间：$(date)"
+                else
+                    echo "设置时区失败，请检查权限或时区名称"
+                fi
+            fi
+            ;;
+        2)
+            echo "可用时区列表："
+            timedatectl list-timezones 2>/dev/null | less || echo "无法获取时区列表"
+            ;;
+        3)
+            echo "正在同步系统时间..."
+            if command -v ntpdate >/dev/null 2>&1; then
+                ntpdate pool.ntp.org 2>/dev/null && echo "时间同步成功" || echo "时间同步失败"
+            elif command -v chronyd >/dev/null 2>&1; then
+                chronyc -a makestep && echo "时间同步成功" || echo "时间同步失败"
+            else
+                echo "未找到时间同步工具，正在安装..."
+                if command -v apt >/dev/null 2>&1; then
+                    apt update && apt install -y ntpdate
+                    ntpdate pool.ntp.org
+                elif command -v yum >/dev/null 2>&1; then
+                    yum install -y ntpdate
+                    ntpdate pool.ntp.org
+                fi
+            fi
+            ;;
+        4)
+            return
+            ;;
+        *)
+            echo "无效的选择"
+            ;;
+    esac
+    
+    read -p "按回车键返回..."
+}
+
+file_search_and_process() {
+    clear
+    echo "文件搜索和处理"
+    echo "==============="
+    
+    read -p "请输入搜索目录路径（留空为当前目录）: " search_dir
+    if [[ -z "$search_dir" ]]; then
+        search_dir="."
+    fi
+    
+    if [[ ! -d "$search_dir" ]]; then
+        echo "目录不存在：$search_dir"
+        read -p "按回车键返回..."
+        return
+    fi
+    
+    read -p "请输入文件名模式（如 *.log, *.tmp, test* 等）: " file_pattern
+    if [[ -z "$file_pattern" ]]; then
+        file_pattern="*"
+    fi
+    
+    echo ""
+    echo "搜索结果："
+    found_files=()
+    while IFS= read -r -d '' file; do
+        found_files+=("$file")
+        echo "$(( ${#found_files[@]} )): $file"
+    done < <(find "$search_dir" -name "$file_pattern" -type f -print0 2>/dev/null)
+    
+    if [[ ${#found_files[@]} -eq 0 ]]; then
+        echo "未找到匹配的文件"
+        read -p "按回车键返回..."
+        return
+    fi
+    
+    echo ""
+    echo "找到 ${#found_files[@]} 个文件"
+    echo "1) 删除所有找到的文件"
+    echo "2) 移动所有找到的文件"
+    echo "3) 重命名所有找到的文件"
+    echo "4) 查看文件详情"
+    echo "5) 返回上级菜单"
+    read -p "请选择操作 (1-5): " process_choice
+    
+    case $process_choice in
+        1)
+            read -p "确认删除所有 ${#found_files[@]} 个文件吗？(y/N): " confirm
+            if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+                count=0
+                for file in "${found_files[@]}"; do
+                    rm -f "$file" 2>/dev/null && ((count++))
+                done
+                echo "已删除 $count 个文件"
+            else
+                echo "取消删除操作"
+            fi
+            ;;
+        2)
+            read -p "请输入目标目录路径: " target_dir
+            if [[ -z "$target_dir" ]]; then
+                echo "目标目录不能为空"
+            else
+                mkdir -p "$target_dir" 2>/dev/null
+                count=0
+                for file in "${found_files[@]}"; do
+                    mv "$file" "$target_dir/" 2>/dev/null && ((count++))
+                done
+                echo "已移动 $count 个文件到 $target_dir"
+            fi
+            ;;
+        3)
+            read -p "请输入重命名前缀: " prefix
+            count=0
+            for file in "${found_files[@]}"; do
+                filename=$(basename "$file")
+                new_name="${prefix}${filename}"
+                mv "$file" "$(dirname "$file")/$new_name" 2>/dev/null && ((count++))
+            done
+            echo "已重命名 $count 个文件"
+            ;;
+        4)
+            echo "文件详情："
+            for file in "${found_files[@]}"; do
+                echo "文件：$file"
+                echo "大小：$(du -h "$file" | cut -f1)"
+                echo "修改时间：$(stat -c %y "$file" 2>/dev/null || stat -f %Sm "$file" 2>/dev/null)"
+                echo "权限：$(ls -ld "$file" | awk '{print $1}')"
+                echo "---"
+            done
+            ;;
+        5)
+            return
+            ;;
+        *)
+            echo "无效的选择"
+            ;;
+    esac
+    
+    read -p "按回车键返回..."
+}
+
+cleanup_unused_packages() {
+    clear
+    echo "清理无用软件包"
+    echo "============="
+    
+    echo "当前系统信息："
+    cat /etc/os-release 2>/dev/null | grep "PRETTY_NAME" | cut -d'"' -f2
+    
+    echo ""
+    echo "可清理的项目："
+    
+    if command -v apt >/dev/null 2>&1; then
+        echo "1) 清理 apt 缓存"
+        echo "2) 删除不需要的软件包"
+        echo "3) 清理旧内核"
+        echo "4) 清理临时文件"
+        echo "5) 全面清理"
+        echo "6) 返回上级菜单"
+        
+        read -p "请选择操作 (1-6): " cleanup_choice
+        
+        case $cleanup_choice in
+            1)
+                echo "清理 apt 缓存..."
+                apt-get clean
+                echo "apt 缓存已清理"
+                ;;
+            2)
+                echo "删除不需要的软件包..."
+                apt-get autoremove -y
+                echo "不需要的软件包已删除"
+                ;;
+            3)
+                echo "清理旧内核..."
+                apt-get --purge autoremove -y
+                echo "旧内核已清理"
+                ;;
+            4)
+                echo "清理临时文件..."
+                rm -rf /tmp/* 2>/dev/null
+                rm -rf /var/tmp/* 2>/dev/null
+                echo "临时文件已清理"
+                ;;
+            5)
+                echo "全面清理系统..."
+                apt-get update
+                apt-get upgrade -y
+                apt-get autoremove -y
+                apt-get autoclean -y
+                apt-get clean
+                rm -rf /tmp/* 2>/dev/null
+                rm -rf /var/tmp/* 2>/dev/null
+                journalctl --vacuum-time=2d 2>/dev/null
+                echo "系统全面清理完成"
+                ;;
+            6)
+                return
+                ;;
+            *)
+                echo "无效的选择"
+                ;;
+        esac
+        
+    elif command -v yum >/dev/null 2>&1; then
+        echo "1) 清理 yum 缓存"
+        echo "2) 删除不需要的软件包"
+        echo "3) 清理临时文件"
+        echo "4) 全面清理"
+        echo "5) 返回上级菜单"
+        
+        read -p "请选择操作 (1-5): " cleanup_choice
+        
+        case $cleanup_choice in
+            1)
+                echo "清理 yum 缓存..."
+                yum clean all
+                echo "yum 缓存已清理"
+                ;;
+            2)
+                echo "删除不需要的软件包..."
+                yum autoremove -y
+                echo "不需要的软件包已删除"
+                ;;
+            3)
+                echo "清理临时文件..."
+                rm -rf /tmp/* 2>/dev/null
+                rm -rf /var/tmp/* 2>/dev/null
+                echo "临时文件已清理"
+                ;;
+            4)
+                echo "全面清理系统..."
+                yum update -y
+                yum autoremove -y
+                yum clean all
+                rm -rf /tmp/* 2>/dev/null
+                rm -rf /var/tmp/* 2>/dev/null
+                echo "系统全面清理完成"
+                ;;
+            5)
+                return
+                ;;
+            *)
+                echo "无效的选择"
+                ;;
+        esac
+        
+    elif command -v dnf >/dev/null 2>&1; then
+        echo "1) 清理 dnf 缓存"
+        echo "2) 删除不需要的软件包"
+        echo "3) 清理临时文件"
+        echo "4) 全面清理"
+        echo "5) 返回上级菜单"
+        
+        read -p "请选择操作 (1-5): " cleanup_choice
+        
+        case $cleanup_choice in
+            1)
+                echo "清理 dnf 缓存..."
+                dnf clean all
+                echo "dnf 缓存已清理"
+                ;;
+            2)
+                echo "删除不需要的软件包..."
+                dnf autoremove -y
+                echo "不需要的软件包已删除"
+                ;;
+            3)
+                echo "清理临时文件..."
+                rm -rf /tmp/* 2>/dev/null
+                rm -rf /var/tmp/* 2>/dev/null
+                echo "临时文件已清理"
+                ;;
+            4)
+                echo "全面清理系统..."
+                dnf update -y
+                dnf autoremove -y
+                dnf clean all
+                rm -rf /tmp/* 2>/dev/null
+                rm -rf /var/tmp/* 2>/dev/null
+                echo "系统全面清理完成"
+                ;;
+            5)
+                return
+                ;;
+            *)
+                echo "无效的选择"
+                ;;
+        esac
+    else
+        echo "不支持的包管理器"
+        read -p "按回车键返回..."
+        return
+    fi
+    
+    read -p "按回车键返回..."
 }
 
 network_menu() {
@@ -1303,6 +2154,29 @@ while true; do
         1) 
             while true; do
                 clear
+                quick_actions_menu
+                read -p "请输入你的选择: " quick_choice
+                case $quick_choice in
+                    1) batch_delete_files ;;
+                    2) batch_rename_move_files ;;
+                    3) batch_kill_processes ;;
+                    4) system_reboot ;;
+                    5) show_kernel_version ;;
+                    6) quick_manage_icmp ;;
+                    7) system_update ;;
+                    8) dns_management ;;
+                    9) file_lock_management ;;
+                    10) timezone_management ;;
+                    11) file_search_and_process ;;
+                    12) cleanup_unused_packages ;;
+                    13) break ;;
+                    *) echo "无效的选择，请重试。" ;;
+                esac
+            done
+            ;;
+        2) 
+            while true; do
+                clear
                 network_menu
                 read -p "请输入你的选择: " net_choice
                 case $net_choice in
@@ -1328,7 +2202,7 @@ while true; do
 		              esac
             done
             ;;
-        2) 
+        3) 
             while true; do
                 clear
                 proxy_menu
@@ -1353,7 +2227,7 @@ while true; do
                 esac
             done
             ;;
-        3) 
+        4) 
             while true; do
                 clear
                 vps_test_menu
@@ -1368,9 +2242,9 @@ while true; do
                 esac
             done
             ;;
-        4) function_script ;;
-        5) install_common_env_software ;;
-        6) echo "退出"; exit 0 ;;
+        5) function_script ;;
+        6) install_common_env_software ;;
+        7) echo "退出"; exit 0 ;;
         *) echo "无效的选择，请重试。"; read -r ;;
     esac
 done
