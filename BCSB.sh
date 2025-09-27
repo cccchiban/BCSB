@@ -988,13 +988,15 @@ network_test_submenu() {
     echo -e "\033[32m1)\033[0m 三网测速脚本"
     echo -e "\033[32m2)\033[0m 回程测试脚本"
     echo -e "\033[32m3)\033[0m 网络质量体检"
-    echo -e "\033[32m4)\033[0m 返回上一级"
+    echo -e "\033[32m4)\033[0m iperf3网络性能测试"
+    echo -e "\033[32m5)\033[0m 返回上一级"
     read -p "请输入你的选择: " network_test_choice
     case $network_test_choice in
         1) network_speed_test_script ;;
         2) backtrace_test_script ;;
         3) bash <(curl -sL Net.Check.Place) ;;
-        4) return ;;
+        4) iperf3_test_script ;;
+        5) return ;;
         *) echo "无效的选择，请重试。" ;;
     esac
 }
@@ -1871,7 +1873,7 @@ network_speed_test_script() {
     read -p "请输入你的选择: " speedtest_choice
     case $speedtest_choice in
         1)
-            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh)    
+            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh)
             ;;
         2)
             bash <(curl -sL res.yserver.ink/taier.sh)
@@ -1906,6 +1908,14 @@ backtrace_test_script() {
             echo "无效的选择，请重试。"
             ;;
     esac
+    echo "脚本运行完成。按回车键返回菜单。"
+    read -r
+}
+
+iperf3_test_script() {
+    clear
+    echo "正在下载并运行 iperf3 测试脚本..."
+    curl -L https://raw.githubusercontent.com/cccchiban/BCSB/main/iperf3_test.sh -o iperf3_test.sh && chmod +x iperf3_test.sh && ./iperf3_test.sh
     echo "脚本运行完成。按回车键返回菜单。"
     read -r
 }
