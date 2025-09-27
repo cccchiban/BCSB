@@ -15,6 +15,7 @@ DEFAULT_PORT=5201
 DEFAULT_DURATION=10
 DEFAULT_PROTOCOL="tcp"
 DEFAULT_SERVER_IP="127.0.0.1"
+DEFAULT_PARALLEL=1
 
 # 全局变量
 SERVER_PID=""
@@ -108,12 +109,16 @@ run_client_test() {
     local port=$2
     local protocol=$3
     local duration=$4
+    local parallel=$5
     
     echo -e "${BLUE}正在运行 iperf3 客户端测试...${NC}"
     echo "服务器地址：$server_ip"
     echo "端口：$port"
     echo "协议：$protocol"
     echo "持续时间：$duration 秒"
+    if [[ $parallel -gt 1 ]]; then
+        echo "并发连接数：$parallel"
+    fi
     
     # 构建客户端命令
     local client_cmd="iperf3 -c $server_ip -p $port -t $duration"
@@ -122,8 +127,12 @@ run_client_test() {
         client_cmd="$client_cmd -u -b 0"
     fi
     
-    # 添加详细输出格式
-    client_cmd="$client_cmd --json"
+    # 添加并发连接参数
+    if [[ $parallel -gt 1 ]]; then
+        client_cmd="$client_cmd -P $parallel"
+    fi
+    
+    # 使用普通输出格式（移除JSON格式）
     
     echo -e "${YELLOW}开始测试...${NC}"
     echo "================================"
@@ -218,7 +227,16 @@ server_config_menu() {
     echo -e "\n${BLUE}=== iperf3 服务器配置 ===${NC}"
     
     # 获取配置参数
-    port=$(get_user_input "请输入监听端口" "$DEFAULT_PORT" "^[0-9]+$")
+    echo -ne "${YELLOW}请输入监听端口${NC} [默认: $DEFAULT_PORT]: "
+    read port_input
+    if [[ -z "$port_input" ]]; then
+        port=$DEFAULT_PORT
+    elif [[ ! "$port_input" =~ ^[0-9]+$ ]]; then
+        echo -e "${RED}输入无效，使用默认值：$DEFAULT_PORT${NC}"
+        port=$DEFAULT_PORT
+    else
+        port=$port_input
+    fi
     
     echo -e "${BLUE}选择协议：${NC}"
     echo "1) TCP (推荐)"
@@ -259,9 +277,54 @@ client_test_menu() {
     echo -e "\n${BLUE}=== iperf3 客户端测试 ===${NC}"
     
     # 获取配置参数
-    server_ip=$(get_user_input "请输入服务器IP地址" "$DEFAULT_SERVER_IP" "")
-    port=$(get_user_input "请输入服务器端口" "$DEFAULT_PORT" "^[0-9]+$")
-    duration=$(get_user_input "请输入测试持续时间(秒)" "$DEFAULT_DURATION" "^[0-9]+$")
+    echo -ne "${YELLOW}请输入服务器IP地址${NC} [默认: $DEFAULT_SERVER_IP]: "
+    read server_ip_input
+    if [[ -z "$server_ip_input" ]]; then
+        server_ip=$DEFAULT_SERVER_IP
+    else
+        server_ip=$server_ip_input
+    fi
+    
+    echo -ne "${YELLOW}请输入服务器端口${NC} [默认: $DEFAULT_PORT]: "
+    read port_input
+    if [[ -z "$port_input" ]]; then
+        port=$DEFAULT_PORT
+    elif [[ ! "$port_input" =~ ^[0-9]+$ ]]; then
+        echo -e "${RED}输入无效，使用默认值：$DEFAULT_PORT${NC}"
+        port=$DEFAULT_PORT
+    else
+        port=$port_input
+    fi
+    
+    echo -ne "${YELLOW}请输入测试持续时间(秒)${NC} [默认: $DEFAULT_DURATION]: "
+    read duration_input
+    if [[ -z "$duration_input" ]]; then
+        duration=$DEFAULT_DURATION
+    elif [[ ! "$duration_input" =~ ^[0-9]+$ ]]; then
+        echo -e "${RED}输入无效，使用默认值：$DEFAULT_DURATION${NC}"
+        duration=$DEFAULT_DURATION
+    else
+        duration=$duration_input
+    fi
+    
+    echo -ne "${YELLOW}请输入并发连接数${NC} [建议默认: $DEFAULT_PARALLEL]: "
+    read parallel_input
+    if [[ -z "$parallel_input" ]]; then
+        parallel=$DEFAULT_PARALLEL
+    elif [[ ! "$parallel_input" =~ ^[0-9]+$ ]]; then
+        echo -e "${RED}输入无效，使用默认值：$DEFAULT_PARALLEL${NC}"
+        parallel=$DEFAULT_PARALLEL
+    else
+        parallel=$parallel_input
+        # 限制并发数范围
+        if [[ $parallel -gt 50 ]]; then
+            echo -e "${YELLOW}并发数过大，限制为50${NC}"
+            parallel=50
+        elif [[ $parallel -lt 1 ]]; then
+            echo -e "${YELLOW}并发数过小，设置为1${NC}"
+            parallel=1
+        fi
+    fi
     
     echo -e "${BLUE}选择协议：${NC}"
     echo "1) TCP (推荐)"
@@ -279,6 +342,9 @@ client_test_menu() {
     echo "端口：$port"
     echo "协议：$protocol"
     echo "持续时间：$duration 秒"
+    if [[ $parallel -gt 1 ]]; then
+        echo "并发连接数：$parallel"
+    fi
     
     echo -ne "${YELLOW}确认开始测试？(y/n)${NC} [默认: y]: "
     read confirm
@@ -289,7 +355,7 @@ client_test_menu() {
     fi
     
     # 运行测试
-    run_client_test $server_ip $port $protocol $duration
+    run_client_test $server_ip $port $protocol $duration $parallel
 }
 
 # 快速测试菜单
@@ -310,12 +376,46 @@ quick_test_menu() {
             stop_server
             start_server $DEFAULT_PORT "tcp"
             sleep 3
-            run_client_test "127.0.0.1" $DEFAULT_PORT "tcp" $DEFAULT_DURATION
+            run_client_test "127.0.0.1" $DEFAULT_PORT "tcp" $DEFAULT_DURATION $DEFAULT_PARALLEL
             ;;
         3)
             client_test_menu
             ;;
         4)
+            return
+            ;;
+        *)
+            echo -e "${BLUE}启动默认服务器...${NC}"
+            stop_server
+            start_server $DEFAULT_PORT "tcp"
+            ;;
+    esac
+}
+
+# 服务器管理菜单
+show_server_management_menu() {
+    echo -e "\n${BLUE}=== iperf3 服务器管理 ===${NC}"
+    echo ""
+    echo "1) 启动默认服务器 (TCP, 5201端口)"
+    echo "2) 自定义服务器配置"
+    echo "3) 查看服务器状态"
+    echo "4) 停止服务器"
+    echo "5) 返回主菜单"
+    
+    echo -ne "${YELLOW}请选择 (1-5)${NC} [默认: 1]: "
+    read server_choice
+    
+    case $server_choice in
+        2)
+            server_config_menu
+            ;;
+        3)
+            show_server_status
+            ;;
+        4)
+            stop_server
+            ;;
+        5)
             return
             ;;
         *)
@@ -385,6 +485,9 @@ main() {
         read choice
         
         case $choice in
+            1)
+                show_server_management_menu
+                ;;
             2)
                 client_test_menu
                 ;;
@@ -406,7 +509,7 @@ main() {
                 exit 0
                 ;;
             *)
-                server_config_menu
+                show_server_management_menu
                 ;;
         esac
         
