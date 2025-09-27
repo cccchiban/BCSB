@@ -988,7 +988,7 @@ network_test_submenu() {
     echo -e "\033[32m1)\033[0m 三网测速脚本"
     echo -e "\033[32m2)\033[0m 回程测试脚本"
     echo -e "\033[32m3)\033[0m 网络质量体检"
-    echo -e "\033[32m4)\033[0m iperf3网络性能测试"
+    echo -e "\033[32m4)\033[0m iperf3网络测试"
     echo -e "\033[32m5)\033[0m 返回上一级"
     read -p "请输入你的选择: " network_test_choice
     case $network_test_choice in
