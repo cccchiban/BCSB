@@ -110,6 +110,7 @@ run_client_test() {
     local protocol=$3
     local duration=$4
     local parallel=$5
+    local reverse_test=${6:-false}  # 新增回程测试参数
     
     echo -e "${BLUE}正在运行 iperf3 客户端测试...${NC}"
     echo "服务器地址：$server_ip"
@@ -119,12 +120,20 @@ run_client_test() {
     if [[ $parallel -gt 1 ]]; then
         echo "并发连接数：$parallel"
     fi
+    if [[ "$reverse_test" == "true" ]]; then
+        echo -e "${YELLOW}测试模式：回程测试（反向）${NC}"
+    fi
     
     # 构建客户端命令
     local client_cmd="iperf3 -c $server_ip -p $port -t $duration"
     
     if [[ "$protocol" == "udp" ]]; then
         client_cmd="$client_cmd -u -b 0"
+    fi
+    
+    # 添加回程测试参数
+    if [[ "$reverse_test" == "true" ]]; then
+        client_cmd="$client_cmd -R"
     fi
     
     # 添加并发连接参数
@@ -337,6 +346,17 @@ client_test_menu() {
         *) protocol="tcp" ;;
     esac
     
+    echo -e "${BLUE}选择测试方向：${NC}"
+    echo "1) 去程测试 (客户端→服务器)"
+    echo "2) 回程测试 (服务器→客户端)"
+    echo -ne "${YELLOW}请选择 (1-2)${NC} [默认: 1]: "
+    read direction_choice
+    
+    case $direction_choice in
+        2) reverse_test="true" ;;
+        *) reverse_test="false" ;;
+    esac
+    
     echo -e "\n${BLUE}测试配置：${NC}"
     echo "服务器地址：$server_ip"
     echo "端口：$port"
@@ -344,6 +364,11 @@ client_test_menu() {
     echo "持续时间：$duration 秒"
     if [[ $parallel -gt 1 ]]; then
         echo "并发连接数：$parallel"
+    fi
+    if [[ "$reverse_test" == "true" ]]; then
+        echo "测试方向：回程测试 (服务器→客户端)"
+    else
+        echo "测试方向：去程测试 (客户端→服务器)"
     fi
     
     echo -ne "${YELLOW}确认开始测试？(y/n)${NC} [默认: y]: "
@@ -355,7 +380,7 @@ client_test_menu() {
     fi
     
     # 运行测试
-    run_client_test $server_ip $port $protocol $duration $parallel
+    run_client_test $server_ip $port $protocol $duration $parallel $reverse_test
 }
 
 # 快速测试菜单
@@ -465,12 +490,18 @@ show_help() {
     echo "• 协议：TCP或UDP"
     echo "• 持续时间：测试运行时间（秒）"
     echo "• 服务器IP：目标服务器的IP地址"
+    echo "• 测试方向：去程测试或回程测试"
+    
+    echo -e "\n${YELLOW}测试方向说明：${NC}"
+    echo "• 去程测试：从客户端向服务器发送数据（常规测试）"
+    echo "• 回程测试：从服务器向客户端发送数据（使用-R参数）"
     
     echo -e "\n${YELLOW}注意事项：${NC}"
     echo "• 确保防火墙允许指定端口的通信"
     echo "• 服务器和客户端需要在同一网络或可互相访问"
     echo "• UDP测试可能产生大量流量"
     echo "• 测试结果受网络状况影响"
+    echo "• 回程测试需要服务器支持双向通信"
 }
 
 # 主程序
